@@ -36,13 +36,19 @@ php artisan key:generate
 
 ---
 
-## 🗃️ Database
+## 🗃️ Database Migration
 
-Make sure the following table exists in your database:
+Run migrations with seeding to create required tables and seed system data:
 
-- `admin`
+```bash
+php artisan migrate --seed
+```
 
-Note: locate the System_Tables.sql from the root level of the template and copy and create the admin table in your database
+This will:
+
+- Create the `system_status` table
+- Seed the system status (online/maintenance)
+- Set up HRIS configuration
 
 ---
 
