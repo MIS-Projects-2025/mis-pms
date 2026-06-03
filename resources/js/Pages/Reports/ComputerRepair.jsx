@@ -93,7 +93,6 @@ export default function ComputerRepair({
             model: computer.model,
             computer_type: computer.category,
             operating_system,
-            issued_to,
         };
 
         // Map internal keys to friendly names
@@ -119,7 +118,10 @@ export default function ComputerRepair({
             );
 
             if (visitInventory) {
-                window.open("http://192.168.2.221:88/MIS-IS", "_blank");
+                window.open(
+                    "http://192.168.2.221:8195/MIS-IS/hardware",
+                    "_blank",
+                );
             }
 
             // Optionally reset form if validation fails
