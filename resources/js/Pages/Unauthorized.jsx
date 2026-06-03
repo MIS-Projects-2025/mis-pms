@@ -4,7 +4,7 @@ import { Head } from "@inertiajs/react";
 import { motion } from "framer-motion";
 import { LogOut, Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 export default function Unauthorized() {
     const [countdown, setCountdown] = useState(10);
