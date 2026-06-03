@@ -103,8 +103,12 @@ class AuthMiddleware
 
         $userId = $currentUser->emp_id;
 
+
         Log::info('User roles fetched', ['emp_id' => $userId]);
 
+        $isAdmin = DB::connection('checklist')->table('admin')
+            ->where('emp_id', $currentUser->emp_id)
+            ->first();
 
         // 🔹 Set session — IDs only, names resolved via HRIS Lookup API
         session(['emp_data' => [
@@ -119,11 +123,18 @@ class AuthMiddleware
             'emp_station_id'   => $currentUser->emp_station_id,
             'shift_type'       => $currentUser->shift_type ?? null,
             'team'             => $currentUser->team ?? null,
-
             'generated_at'   => $currentUser->generated_at,
+            'emp_system_role' => $isAdmin->emp_role ?? null,
+
         ]]);
 
         session()->save();
+
+        if (session('emp_data') && !in_array(session('emp_data')['emp_system_role'], ['admin', 'superadmin', 'boxing', 'supporttech', 'networktech'])) {
+            session()->forget('emp_data');
+            session()->flush();
+            return redirect()->route('unauthorized');
+        }
 
         $request->setUserResolver(fn() => (object) session('emp_data'));
 
@@ -149,6 +160,9 @@ class AuthMiddleware
         }
 
         Cookie::queue($cookie);
+
+
+
         return $next($request);
     }
 
