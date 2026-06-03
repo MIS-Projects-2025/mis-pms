@@ -3,7 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState, useEffect } from "react";
 import { Select } from "antd";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 import {
     Eye,
@@ -288,8 +288,8 @@ export default function PrinterChecklist({
                                 items: Array.isArray(item.items)
                                     ? item.items
                                     : typeof item.items === "string"
-                                      ? JSON.parse(item.items)
-                                      : [],
+                                        ? JSON.parse(item.items)
+                                        : [],
                             });
 
                             setIsViewOpen(true);
@@ -301,35 +301,35 @@ export default function PrinterChecklist({
                     {((!item.verified_by &&
                         item.performed_by === emp_data?.emp_name) ||
                         Number(emp_data?.emp_id) === 1268) && (
-                        <>
-                            <Button
-                                size="sm"
-                                className="bg-amber-500 hover:bg-amber-600 text-white"
-                                onClick={() => {
-                                    setSelectedChecklist({
-                                        ...item,
-                                        items: Array.isArray(item.items)
-                                            ? item.items
-                                            : typeof item.items === "string"
-                                              ? JSON.parse(item.items)
-                                              : [],
-                                    });
+                            <>
+                                <Button
+                                    size="sm"
+                                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                                    onClick={() => {
+                                        setSelectedChecklist({
+                                            ...item,
+                                            items: Array.isArray(item.items)
+                                                ? item.items
+                                                : typeof item.items === "string"
+                                                    ? JSON.parse(item.items)
+                                                    : [],
+                                        });
 
-                                    setIsEditOpen(true);
-                                }}
-                            >
-                                <Pencil className="h-4 w-4" />
-                            </Button>
+                                        setIsEditOpen(true);
+                                    }}
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
 
-                            <Button
-                                size="sm"
-                                className="bg-red-500 hover:bg-red-600 text-white"
-                                onClick={() => handleDelete(item.id)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </>
-                    )}
+                                <Button
+                                    size="sm"
+                                    className="bg-red-500 hover:bg-red-600 text-white"
+                                    onClick={() => handleDelete(item.id)}
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </>
+                        )}
                 </div>
             ),
         };
@@ -795,7 +795,7 @@ export default function PrinterChecklist({
                                 </label>
                                 <div className="flex items-center gap-2">
                                     {!selectedChecklist.verified_by &&
-                                    ["1268"].includes(emp_data.emp_id) ? (
+                                        ["1268"].includes(emp_data.emp_id) ? (
                                         <>
                                             <input
                                                 type="text"

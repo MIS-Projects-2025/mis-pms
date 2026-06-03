@@ -3,7 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState } from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 export default function BoxingPrinterChecklist({
     tableData,
@@ -188,8 +188,8 @@ export default function BoxingPrinterChecklist({
                                 items: (Array.isArray(item.items)
                                     ? item.items
                                     : typeof item.items === "string"
-                                      ? JSON.parse(item.items)
-                                      : []
+                                        ? JSON.parse(item.items)
+                                        : []
                                 ).map((i) => ({
                                     station_name:
                                         i.station_name || i.items || "",
@@ -216,8 +216,8 @@ export default function BoxingPrinterChecklist({
                                         items: (Array.isArray(item.items)
                                             ? item.items
                                             : typeof item.items === "string"
-                                              ? JSON.parse(item.items)
-                                              : []
+                                                ? JSON.parse(item.items)
+                                                : []
                                         ).map((i) => ({
                                             station_name:
                                                 i.station_name || i.item || "",
@@ -251,8 +251,8 @@ export default function BoxingPrinterChecklist({
                                         items: (Array.isArray(item.items)
                                             ? item.items
                                             : typeof item.items === "string"
-                                              ? JSON.parse(item.items)
-                                              : []
+                                                ? JSON.parse(item.items)
+                                                : []
                                         ).map((i) => ({
                                             station_name:
                                                 i.station_name || i.item || "",

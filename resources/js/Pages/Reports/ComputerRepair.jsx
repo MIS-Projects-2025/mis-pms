@@ -10,7 +10,7 @@ import VisibilityTwoToneIcon from "@mui/icons-material/VisibilityTwoTone";
 import { PreviewTwoTone } from "@mui/icons-material";
 import PreviewTwoToneIcon from "@mui/icons-material/PreviewTwoTone";
 import { Eye, CircleX, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 export default function ComputerRepair({
     tableData,
@@ -181,7 +181,7 @@ export default function ComputerRepair({
                     setOpenViewDrawer(true);
                 }}
             >
-                <Eye  className="h-6 w-6"/>
+                <Eye className="h-6 w-6" />
             </Button>
         ),
     }));
@@ -653,7 +653,7 @@ export default function ComputerRepair({
                         <Divider titlePlacement="left">Attachments</Divider>
 
                         {viewData.attachments &&
-                        JSON.parse(viewData.attachments).length > 0 ? (
+                            JSON.parse(viewData.attachments).length > 0 ? (
                             <div className="grid grid-cols-3 gap-3">
                                 {JSON.parse(viewData.attachments).map(
                                     (img, index) => (

@@ -4,7 +4,7 @@ import DataTable from "@/Components/DataTable";
 import { useState, useEffect } from "react";
 import { Select } from "antd";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/Components/ui/button";
 
 
 export default function ComputerChecklist({
@@ -238,32 +238,32 @@ export default function ComputerChecklist({
                         onClick={() => openViewModal(item)}
                     >
                         {" "}
-                        <Eye className="h-4 w-4"/>{" "}
+                        <Eye className="h-4 w-4" />{" "}
                     </Button>
 
                     {((!item.verified_by &&
                         item.performed_by === emp_data?.emp_name) ||
                         Number(emp_data?.emp_id) === 1268) && (
-                        <>
-                            <Button
-                                size="sm"
-                                className="bg-amber-500 hover:bg-amber-600 text-white"
-                                onClick={() => openEditModal(item)}
-                            >
-                                {" "}
-                                <Pencil className="h-4 w-4" />{" "}
-                            </Button>
+                            <>
+                                <Button
+                                    size="sm"
+                                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                                    onClick={() => openEditModal(item)}
+                                >
+                                    {" "}
+                                    <Pencil className="h-4 w-4" />{" "}
+                                </Button>
 
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDelete(item.id)}
-                            >
-                                {" "}
-                                <Trash2 className="h-4 w-4" />{""}
-                            </Button>
-                        </>
-                    )}
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDelete(item.id)}
+                                >
+                                    {" "}
+                                    <Trash2 className="h-4 w-4" />{""}
+                                </Button>
+                            </>
+                        )}
                 </div>
             ),
         };
@@ -642,8 +642,8 @@ export default function ComputerChecklist({
                                     value={
                                         viewItem.date_checked
                                             ? new Date(
-                                                  viewItem.date_checked,
-                                              ).toLocaleDateString("en-US")
+                                                viewItem.date_checked,
+                                            ).toLocaleDateString("en-US")
                                             : "-"
                                     }
                                     readOnly
@@ -660,8 +660,8 @@ export default function ComputerChecklist({
                                     value={
                                         viewItem.date_due
                                             ? new Date(
-                                                  viewItem.date_due,
-                                              ).toLocaleDateString("en-US")
+                                                viewItem.date_due,
+                                            ).toLocaleDateString("en-US")
                                             : "-"
                                     }
                                     readOnly
@@ -685,7 +685,7 @@ export default function ComputerChecklist({
                                 </label>
                                 <div className="flex items-center gap-2">
                                     {!viewItem.verified_by &&
-                                    ["1268"].includes(emp_data.emp_id) ? (
+                                        ["1268"].includes(emp_data.emp_id) ? (
                                         <>
                                             <input
                                                 type="text"
