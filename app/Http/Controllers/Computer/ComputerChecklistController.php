@@ -38,10 +38,10 @@ class ComputerChecklistController extends Controller
             'checklist',
             'computer_checklists',
             [
-                // 'conditions' => function ($query) {
-                //     return $query
-                //         ->whereIn('emp_role', ['admin']);
-                // },
+                'conditions' => function ($query) {
+                    return $query
+                        ->orderBy('id', 'DESC');
+                },
 
                 'searchColumns' => ['computer_name', 'date_checked', 'performed_by', 'recommendations'],
             ]

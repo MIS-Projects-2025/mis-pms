@@ -9,6 +9,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
+       
+
         // Group by date_created (DATE only)
         $computerPerDay = DB::connection('checklist')
             ->table('computer_checklists')
