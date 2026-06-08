@@ -322,7 +322,7 @@ export default function CctvChecklist({
                 tabs={[
                     { label: "All", value: "" },
                     { label: "Pending", value: "2" },
-                    { label: "Done", value: "1" },
+                    { label: "Verified", value: "1" },
                 ]}
             />
 
