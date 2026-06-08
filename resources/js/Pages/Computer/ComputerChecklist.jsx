@@ -2,9 +2,41 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState, useEffect } from "react";
-import { Select } from "antd";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/Components/ui/button";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label} from "@/components/ui/label";
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
+
+import { X, Save, FileText, Check } from "lucide-react";
 
 
 export default function ComputerChecklist({
@@ -14,6 +46,7 @@ export default function ComputerChecklist({
     computerName,
     emp_data,
 }) {
+
     const { Option } = Select;
     const [isOpen, setIsOpen] = useState(false);
     const [checklistItems, setChecklistItems] = useState([]);
@@ -313,119 +346,105 @@ export default function ComputerChecklist({
                 }}
                 routeName={route("computer-checklist")}
                 filters={tableFilters}
-                rowKey="computer_name"
+                rowKey="id"
                 showExport={false}
+                tabKey="status"
+                tabs={[
+                    { label: "All", value: "" },
+                    { label: "Pending", value: "2" },
+                    { label: "Verified", value: "1" },
+                ]}
             />
 
             {/* Create */}
-            {isOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start overflow-y-auto z-50">
-                    <div className="bg-white text-gray-800 w-full max-w-6xl mx-4 my-10 rounded-lg shadow-lg p-5 relative">
-                        <button
-                            className="absolute top-4 right-4 text-red-600 hover:text-red-900 text-lg"
-                            onClick={toggleModal}
-                        >
-                            <i className="fa fa-times"></i>
-                        </button>
-
-                        <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-red-800 uppercase">
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl font-bold text-red-800 uppercase">
                             Preventive Maintenance Checklist for Desktop and
                             Laptop
-                        </h2>
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        {/* Form Inputs */}
-                        <div className="flex flex-col-4 md:flex-row md:items-center md:space-x-4 mb-4 gap-2">
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium mb-1">
-                                    Computer Name
-                                </label>
-                                <Select
-                                    showSearch
-                                    value={selectedComputer}
-                                    onChange={(value) =>
-                                        setSelectedComputer(value)
-                                    }
-                                    optionFilterProp="children"
-                                    filterOption={(input, option) =>
-                                        option.children
-                                            .toLowerCase()
-                                            .includes(input.toLowerCase())
-                                    }
-                                    placeholder="Select Computer..."
-                                    className="w-full border border-gray-600 p-2"
-                                    required
-                                >
+                    {/* FORM */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                            <Label>Computer Name</Label>
+
+                            <Select
+                                value={selectedComputer}
+                                onValueChange={setSelectedComputer}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Computer" />
+                                </SelectTrigger>
+
+                                <SelectContent>
                                     {hostnames.map((host) => (
-                                        <Option key={host} value={host}>
+                                        <SelectItem key={host} value={host}>
                                             {host}
-                                        </Option>
+                                        </SelectItem>
                                     ))}
-                                </Select>
-                            </div>
-
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Done:
-                                </label>
-                                <input
-                                    type="date"
-                                    className="w-full border rounded p-2 text-sm"
-                                    value={dateChecked}
-                                    onChange={(e) =>
-                                        setDateChecked(e.target.value)
-                                    }
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Due:
-                                </label>
-                                <input
-                                    type="date"
-                                    className="w-full border rounded p-2 text-sm"
-                                    value={dateDue}
-                                    onChange={(e) => setDateDue(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex-1">
-                                <label className="block text-sm font-medium mb-1">
-                                    Done By
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
-                                    value={emp_data?.emp_name || ""}
-                                    readOnly
-                                />
-                            </div>
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        {/* Checklist Table with multiple check-all */}
-                        <div className=" max-h-[60vh] md:max-h-[80vh]">
-                            <table className="min-w-full text-sm text-left border table-auto">
-                                <thead className="bg-blue-100 text-gray-700 sticky top-0">
-                                    <tr>
-                                        <th className="border p-2">Item#</th>
-                                        <th className="border p-2">Task</th>
-                                        <th className="border p-2">
-                                            Description
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
+                        <div className="space-y-2">
+                            <Label>Date Done</Label>
+
+                            <Input
+                                type="date"
+                                value={dateChecked}
+                                onChange={(e) => setDateChecked(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Date Due</Label>
+
+                            <Input
+                                type="date"
+                                value={dateDue}
+                                onChange={(e) => setDateDue(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Done By</Label>
+
+                            <Input
+                                value={emp_data?.emp_name ?? ""}
+                                readOnly
+                                className="bg-muted"
+                            />
+                        </div>
+                    </div>
+
+                    {/* TABLE */}
+                    <div className="border rounded-md max-h-[600px] overflow-y-auto">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-background z-10">
+                                <TableRow>
+                                    <TableHead className="w-16">
+                                        Item#
+                                    </TableHead>
+
+                                    <TableHead>Task</TableHead>
+
+                                    <TableHead>Description</TableHead>
+
+                                    <TableHead className="w-24">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Checkbox
                                                 checked={checklistItems.every(
                                                     (item) =>
                                                         item.status === "ok",
                                                 )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
+                                                onCheckedChange={(checked) => {
+                                                    const status = checked
                                                         ? "ok"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -433,23 +452,26 @@ export default function ComputerChecklist({
                                                         })),
                                                     );
                                                 }}
-                                                className="bg-white text-black hover:text-black focus:ring-black"
-                                            />{" "}
-                                            OK
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
+                                            />
+                                            <span className="mt-1 text-xs font-medium">
+                                                OK
+                                            </span>
+                                        </div>
+                                    </TableHead>
+
+                                    <TableHead className="w-24">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Checkbox
                                                 checked={checklistItems.every(
                                                     (item) =>
                                                         item.status ===
                                                         "repair",
                                                 )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
+                                                onCheckedChange={(checked) => {
+                                                    const status = checked
                                                         ? "repair"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -457,22 +479,25 @@ export default function ComputerChecklist({
                                                         })),
                                                     );
                                                 }}
-                                                className="bg-white text-black hover:text-black focus:ring-black"
-                                            />{" "}
-                                            REPAIR
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
+                                            />
+                                            <span className="mt-1 text-xs font-medium">
+                                                REPAIR
+                                            </span>
+                                        </div>
+                                    </TableHead>
+
+                                    <TableHead className="w-24">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Checkbox
                                                 checked={checklistItems.every(
                                                     (item) =>
                                                         item.status === "na",
                                                 )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
+                                                onCheckedChange={(checked) => {
+                                                    const status = checked
                                                         ? "na"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -480,655 +505,549 @@ export default function ComputerChecklist({
                                                         })),
                                                     );
                                                 }}
-                                                className="bg-white text-black hover:text-black focus:ring-black"
-                                            />{" "}
-                                            N/A
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {checklistItems.map((item, index) => (
-                                        <tr
-                                            key={index}
-                                            className="hover:bg-gray-50"
-                                        >
-                                            <td className="border p-2">
-                                                {index + 1}
-                                            </td>
-                                            <td className="border p-2">
-                                                {item.task}
-                                            </td>
-                                            <td className="border p-2 whitespace-pre-line">
-                                                {item.description}
-                                            </td>
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
+                                            />
+                                            <span className="mt-1 text-xs font-medium">
+                                                N/A
+                                            </span>
+                                        </div>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {checklistItems.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{index + 1}</TableCell>
+
+                                        <TableCell>{item.task}</TableCell>
+
+                                        <TableCell className="whitespace-pre-line">
+                                            {item.description}
+                                        </TableCell>
+
+                                        <TableCell className="w-24">
+                                            <div className="flex items-center justify-center">
+                                                <Checkbox
                                                     checked={
                                                         item.status === "ok"
                                                     }
-                                                    onChange={() =>
+                                                    onCheckedChange={() =>
                                                         handleCheckboxChange(
                                                             index,
                                                             "ok",
                                                         )
                                                     }
-                                                    className="bg-white text-black hover:text-black focus:ring-black"
                                                 />
-                                            </td>
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="w-24">
+                                            <div className="flex items-center justify-center">
+                                                <Checkbox
                                                     checked={
                                                         item.status === "repair"
                                                     }
-                                                    onChange={() =>
+                                                    onCheckedChange={() =>
                                                         handleCheckboxChange(
                                                             index,
                                                             "repair",
                                                         )
                                                     }
-                                                    className="bg-white text-black hover:text-black focus:ring-black"
                                                 />
-                                            </td>
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="w-24">
+                                            <div className="flex items-center justify-center">
+                                                <Checkbox
                                                     checked={
                                                         item.status === "na"
                                                     }
-                                                    onChange={() =>
+                                                    onCheckedChange={() =>
                                                         handleCheckboxChange(
                                                             index,
                                                             "na",
                                                         )
                                                     }
-                                                    className="bg-white text-black hover:text-black focus:ring-black"
                                                 />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Recommendations */}
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium mb-1">
-                                Recommendations
-                            </label>
-                            <textarea
-                                className="w-full border rounded p-2 text-sm min-h-[100px]"
-                                value={recommendations}
-                                onChange={(e) =>
-                                    setRecommendations(e.target.value)
-                                }
-                                placeholder="Enter any recommendations here..."
-                            />
-                        </div>
-
-                        {/* Buttons */}
-                        <div className="mt-4 flex flex-col md:flex-row justify-end gap-2">
-                            <button
-                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center justify-center border-2 border-red-800"
-                                onClick={toggleModal}
-                            >
-                                <i className="fa fa-times mr-1"></i> Close
-                            </button>
-                            <button
-                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center border-2 border-green-800 disabled:hidden"
-                                onClick={handleSaveChecklist}
-                                disabled={!canSave}
-                            >
-                                <i className="fa fa-save mr-1"></i> Save
-                                Checklist
-                            </button>
-                        </div>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </div>
-                </div>
-            )}
+
+                    {/* RECOMMENDATIONS */}
+                    <div className="space-y-2">
+                        <Label>Recommendations</Label>
+
+                        <Textarea
+                            rows={5}
+                            value={recommendations}
+                            onChange={(e) => setRecommendations(e.target.value)}
+                            placeholder="Enter any recommendations here..."
+                        />
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                            onClick={toggleModal}
+                        >
+                            <X className="h-4 w-4" />
+                            Close
+                        </Button>
+
+                        <Button
+                            onClick={handleSaveChecklist}
+                            disabled={!canSave}
+                            className={`flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ${
+                                !canSave ? "hidden" : ""
+                            }`}
+                        >
+                            <Save className="h-4 w-4" />
+                            Submit
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* View Modal */}
-            {isViewOpen && viewItem && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start overflow-y-auto z-50">
-                    <div className="bg-white text-gray-800 w-full max-w-6xl mx-4 my-10 rounded-lg shadow-lg p-5 relative">
-                        <button
-                            className="absolute top-4 right-4 text-red-600 hover:text-red-900 text-lg"
-                            onClick={closeViewModal}
-                        >
-                            <i className="fa fa-times"></i>
-                        </button>
+            <Dialog
+                open={isViewOpen && !!viewItem}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setIsViewOpen(false);
+                        setViewItem(null);
+                    }
+                }}
+            >
+                <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+                    {!viewItem ? null : (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="text-center text-2xl font-bold text-red-800 uppercase">
+                                    Preventive Maintenance Checklist for Desktop
+                                    PCs and Laptops
+                                </DialogTitle>
+                            </DialogHeader>
 
-                        <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-red-800 uppercase">
-                            Preventive Maintenance Checklist for Desktop PCs and
-                            Laptops
-                        </h2>
-                        <div className="flex items-center justify-end mb-4">
-                            {viewItem.verified_by && (
-                                <button
-                                    className="px-3 py-2 bg-gray-100 text-red-600 rounded shadow hover:bg-red-700 hover:text-white border-2 border-red-600 hover:border-gray-500 flex items-center text-bold"
-                                    onClick={() =>
-                                        window.open(
-                                            `computer-checklist/pdf/${viewItem.id}`,
-                                            "_blank",
-                                        )
-                                    }
-                                >
-                                    <i className="fa fa-file-pdf mr-1"></i> View
-                                    as PDF
-                                </button>
-                            )}
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Computer Name
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
-                                    value={viewItem.computer_name || "-"}
-                                    readOnly
-                                />
+                            {/* PDF BUTTON */}
+                            <div className="flex justify-end mb-4">
+                                {viewItem.verified_by && (
+                                    <Button
+                                        variant="outline"
+                                        className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+                                        onClick={() =>
+                                            window.open(
+                                                `computer-checklist/pdf/${viewItem.id}`,
+                                                "_blank",
+                                            )
+                                        }
+                                    >
+                                        View as PDF
+                                    </Button>
+                                )}
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Done
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
+                            {/* FIELDS */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <Input
+                                    readOnly
+                                    value={viewItem.computer_name || "-"}
+                                    className="bg-muted"
+                                />
+
+                                <Input
+                                    readOnly
+                                    className="bg-muted"
                                     value={
                                         viewItem.date_checked
                                             ? new Date(
-                                                viewItem.date_checked,
-                                            ).toLocaleDateString("en-US")
+                                                  viewItem.date_checked,
+                                              ).toLocaleDateString("en-US")
                                             : "-"
                                     }
-                                    readOnly
                                 />
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Due
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
+                                <Input
+                                    readOnly
+                                    className="bg-muted"
                                     value={
                                         viewItem.date_due
                                             ? new Date(
-                                                viewItem.date_due,
-                                            ).toLocaleDateString("en-US")
+                                                  viewItem.date_due,
+                                              ).toLocaleDateString("en-US")
                                             : "-"
                                     }
-                                    readOnly
                                 />
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Done By
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
-                                    value={viewItem.performed_by || "-"}
+                                <Input
                                     readOnly
+                                    className="bg-muted"
+                                    value={viewItem.performed_by || "-"}
                                 />
-                            </div>
-                            <div className="flex flex-col">
-                                <label className="block text-sm font-medium mb-1">
-                                    Verified By
-                                </label>
+
+                                {/* VERIFIED */}
                                 <div className="flex items-center gap-2">
                                     {!viewItem.verified_by &&
-                                        ["1268"].includes(emp_data.emp_id) ? (
+                                    ["1268"].includes(emp_data.emp_id) ? (
                                         <>
-                                            <input
-                                                type="text"
-                                                className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed text-1xl"
-                                                value={emp_data.emp_name || "-"}
+                                            <Input
                                                 readOnly
+                                                className="bg-muted"
+                                                value={emp_data.emp_name || "-"}
                                             />
-                                            <button
-                                                className="px-3 py-2 bg-green-500 text-white rounded shadow hover:bg-green-600 border-2 border-green-700 flex items-center"
+
+                                            <Button
+                                                className="bg-green-600 hover:bg-green-700"
                                                 onClick={() =>
                                                     handleVerify(viewItem.id)
                                                 }
                                             >
-                                                <i className="fa fa-check mr-1"></i>{" "}
                                                 Verify
-                                            </button>
+                                            </Button>
                                         </>
                                     ) : (
-                                        <input
-                                            type="text"
-                                            className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
+                                        <Input
+                                            readOnly
+                                            className="bg-muted"
                                             value={
                                                 viewItem.verified_by ||
                                                 "Pending..."
                                             }
-                                            readOnly
                                         />
                                     )}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className=" max-h-[60vh] md:max-h-[80vh]">
-                            <table className="min-w-full text-sm text-left border table-auto">
-                                <thead className="bg-gray-100 sticky top-0">
-                                    <tr>
-                                        <th className="border p-2">Item#</th>
-                                        <th className="border p-2">Task</th>
-                                        <th className="border p-2">
-                                            Description
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            OK
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            REPAIR
-                                        </th>
-                                        <th className="border p-2 text-center">
-                                            N/A
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Array.isArray(viewItem.items) ? (
-                                        viewItem.items.map((item, index) => (
-                                            <tr
-                                                key={index}
-                                                className="hover:bg-gray-50"
-                                            >
-                                                <td className="border p-2">
-                                                    {index + 1}
-                                                </td>
-                                                <td className="border p-2">
-                                                    {item.task}
-                                                </td>
-                                                <td className="border p-2 whitespace-pre-line">
-                                                    {item.description}
-                                                </td>
-                                                <td className="border p-2 text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            item.status === "ok"
-                                                        }
-                                                        disabled
-                                                    />
-                                                </td>
-                                                <td className="border p-2 text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            item.status ===
-                                                            "repair"
-                                                        }
-                                                        disabled
-                                                    />
-                                                </td>
-                                                <td className="border p-2 text-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={
-                                                            item.status === "na"
-                                                        }
-                                                        disabled
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td
-                                                className="border p-2 text-center"
-                                                colSpan={6}
-                                            >
-                                                No checklist items available
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                            {/* TABLE */}
+                            <div className="border rounded-md max-h-[95vh]">
+                                <Table>
+                                    <TableHeader className="sticky top-0 bg-background">
+                                        <TableRow>
+                                            <TableHead>Item#</TableHead>
+                                            <TableHead>Task</TableHead>
+                                            <TableHead>Description</TableHead>
+                                            <TableHead className="text-center">
+                                                OK
+                                            </TableHead>
+                                            <TableHead className="text-center">
+                                                REPAIR
+                                            </TableHead>
+                                            <TableHead className="text-center">
+                                                N/A
+                                            </TableHead>
+                                        </TableRow>
+                                    </TableHeader>
 
-                        <div className="mt-4">
-                            <label className="block text-sm font-medium mb-1">
-                                Recommendations
-                            </label>
-                            <textarea
-                                className="w-full border rounded p-2 text-sm min-h-[80px] bg-gray-100"
-                                value={viewItem.recommendations || ""}
+                                    <TableBody>
+                                        {Array.isArray(viewItem.items) ? (
+                                            viewItem.items.map(
+                                                (item, index) => (
+                                                    <TableRow key={index}>
+                                                        <TableCell>
+                                                            {index + 1}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {item.task}
+                                                        </TableCell>
+                                                        <TableCell className="whitespace-pre-line">
+                                                            {item.description}
+                                                        </TableCell>
+
+                                                        <TableCell className="text-center">
+                                                            <Checkbox
+                                                                checked={
+                                                                    item.status ===
+                                                                    "ok"
+                                                                }
+                                                                disabled
+                                                            />
+                                                        </TableCell>
+
+                                                        <TableCell className="text-center">
+                                                            <Checkbox
+                                                                checked={
+                                                                    item.status ===
+                                                                    "repair"
+                                                                }
+                                                                disabled
+                                                            />
+                                                        </TableCell>
+
+                                                        <TableCell className="text-center">
+                                                            <Checkbox
+                                                                checked={
+                                                                    item.status ===
+                                                                    "na"
+                                                                }
+                                                                disabled
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ),
+                                            )
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={6}
+                                                    className="text-center py-6"
+                                                >
+                                                    No checklist items available
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+
+                            {/* RECOMMENDATIONS */}
+                            <Textarea
+                                className="bg-muted mt-4"
                                 readOnly
+                                value={viewItem.recommendations || ""}
                             />
-                        </div>
 
-                        <div className="flex justify-between mb-4">
-                            <small className="text-sm font-medium text-red-800 font-semibold">
-                                TELFORD SVC PHILS., INC.
-                            </small>
-                            <small className="text-sm font-medium">
-                                MIS-03 (Rev.1)
-                            </small>
-                        </div>
+                            {/* FOOTER */}
+                            <div className="flex justify-end mt-4">
+                                <Button
+                                    variant="destructive"
+                                    onClick={closeViewModal}
+                                >
+                                    Close
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
 
-                        <div className="mt-4 flex justify-end">
-                            <button
-                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center justify-center border-2 border-red-800"
-                                onClick={closeViewModal}
-                            >
-                                <i className="fa fa-times mr-1"></i> Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isEditOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start overflow-y-auto z-50">
-                    <div className="bg-white text-gray-800 w-full max-w-6xl mx-4 my-10 rounded-lg p-5 relative shadow-lg">
-                        {/* Close Button */}
-                        <button
-                            onClick={() => setIsEditOpen(false)}
-                            className="absolute top-4 right-4 text-red-600 hover:text-red-800"
-                        >
-                            <i className="fa fa-times text-2xl"></i>
-                        </button>
-
-                        {/* Title */}
-                        <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-red-800 uppercase">
+            {/* EDIT MODAL */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                    {/* HEADER */}
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-red-800 uppercase text-xl font-bold">
                             Preventive Maintenance Checklist for Desktop PCs and
                             Laptops
-                        </h2>
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        {/* BASIC INFO */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            {/* Computer Name */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Computer Name
-                                </label>
-                                {/* <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
-                                    value={selectedComputer}
-                                    onChange={(e) =>
-                                        setSelectedComputer(e.target.value)
-                                    }
-                                    readOnly
-                                /> */}
-                                <Select
-                                    showSearch
-                                    value={selectedComputer}
-                                    onChange={(value) =>
-                                        setSelectedComputer(value)
-                                    }
-                                    optionFilterProp="children"
-                                    filterOption={(input, option) =>
-                                        option.children
-                                            .toLowerCase()
-                                            .includes(input.toLowerCase())
-                                    }
-                                    placeholder="Select Computer..."
-                                    className="w-full border border-gray-600 p-2"
-                                    required
-                                >
-                                    {hostnames.map((host) => (
-                                        <Option key={host} value={host}>
-                                            {host}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </div>
-
-                            {/* Date Done */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Done
-                                </label>
-                                <input
-                                    type="date"
-                                    className="w-full border rounded p-2 text-sm cursor-not-allowed bg-gray-100"
-                                    value={dateChecked}
-                                    onChange={(e) =>
-                                        setDateChecked(e.target.value)
-                                    }
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* Date Due */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Date Due
-                                </label>
-                                <input
-                                    type="date"
-                                    className="w-full border rounded p-2 text-sm cursor-not-allowed bg-gray-100"
-                                    value={dateDue}
-                                    onChange={(e) => setDateDue(e.target.value)}
-                                    readOnly
-                                />
-                            </div>
-
-                            {/* Done By */}
-                            <div>
-                                <label className="block text-sm font-medium mb-1">
-                                    Done By
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border rounded p-2 text-sm bg-gray-100 cursor-not-allowed"
-                                    value={performedBy}
-                                    readOnly
-                                />
-                            </div>
-                        </div>
-
-                        {/* CHECKLIST TABLE */}
-                        <div className="overflow-x-auto max-h-[90vh] border rounded mb-4">
-                            <table className="min-w-full text-sm border">
-                                <thead className="bg-gray-100 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="border p-2 w-1/12">#</th>
-                                        <th className="border p-2 w-4/12">
-                                            Task
-                                        </th>
-                                        <th className="border p-2 w-5/12">
-                                            Description
-                                        </th>
-
-                                        {/* Check-All */}
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={checklistItems.every(
-                                                    (item) =>
-                                                        item.status === "ok",
-                                                )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
-                                                        ? "ok"
-                                                        : null;
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status,
-                                                        })),
-                                                    );
-                                                }}
-                                            />{" "}
-                                            OK
-                                        </th>
-
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={checklistItems.every(
-                                                    (item) =>
-                                                        item.status ===
-                                                        "repair",
-                                                )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
-                                                        ? "repair"
-                                                        : null;
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status,
-                                                        })),
-                                                    );
-                                                }}
-                                            />{" "}
-                                            REPAIR
-                                        </th>
-
-                                        <th className="border p-2 text-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={checklistItems.every(
-                                                    (item) =>
-                                                        item.status === "na",
-                                                )}
-                                                onChange={(e) => {
-                                                    const status = e.target
-                                                        .checked
-                                                        ? "na"
-                                                        : null;
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status,
-                                                        })),
-                                                    );
-                                                }}
-                                            />{" "}
-                                            N/A
-                                        </th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {checklistItems.map((item, index) => (
-                                        <tr
-                                            key={index}
-                                            className="hover:bg-gray-50"
-                                        >
-                                            <td className="border p-2 text-center">
-                                                {index + 1}
-                                            </td>
-                                            <td className="border p-2">
-                                                {item.task}
-                                            </td>
-                                            <td className="border p-2 whitespace-pre-line">
-                                                {item.description}
-                                            </td>
-
-                                            {/* OK */}
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        item.status === "ok"
-                                                    }
-                                                    onChange={() =>
-                                                        handleCheckboxChange(
-                                                            index,
-                                                            "ok",
-                                                        )
-                                                    }
-                                                />
-                                            </td>
-
-                                            {/* REPAIR */}
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        item.status === "repair"
-                                                    }
-                                                    onChange={() =>
-                                                        handleCheckboxChange(
-                                                            index,
-                                                            "repair",
-                                                        )
-                                                    }
-                                                />
-                                            </td>
-
-                                            {/* N/A */}
-                                            <td className="border p-2 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        item.status === "na"
-                                                    }
-                                                    onChange={() =>
-                                                        handleCheckboxChange(
-                                                            index,
-                                                            "na",
-                                                        )
-                                                    }
-                                                />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Recommendations */}
+                    {/* BASIC INFO */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                        {/* Computer Name */}
                         <div>
-                            <label className="block text-sm font-medium mb-1">
-                                Recommendations
+                            <label className="text-sm font-medium">
+                                Computer Name
                             </label>
-                            <textarea
-                                className="w-full border rounded p-2 text-sm min-h-[120px]"
-                                value={recommendations}
-                                onChange={(e) =>
-                                    setRecommendations(e.target.value)
-                                }
-                            ></textarea>
+
+                            <Select
+                                value={selectedComputer}
+                                onValueChange={setSelectedComputer}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Computer..." />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    {hostnames.map((host) => (
+                                        <SelectItem key={host} value={host}>
+                                            {host}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        <div className="flex flex-col md:flex-row justify-between mb-4 text-sm md:text-base">
-                            <small className="font-medium text-red-800 font-semibold">
-                                TELFORD SVC PHILS., INC.
-                            </small>
-                            <small className="font-medium">
-                                MIS-03 (Rev.1)
-                            </small>
+                        {/* Date Done */}
+                        <div>
+                            <label className="text-sm font-medium">
+                                Date Done
+                            </label>
+                            <Input type="date" value={dateChecked}
+                            onChange={(e) => setDateChecked(e.target.value)} required />
                         </div>
 
-                        {/* FOOTER BUTTONS */}
-                        <div className="mt-4 flex flex-col md:flex-row justify-end gap-2">
-                            <button
-                                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 flex items-center justify-center border-2 border-red-800"
-                                onClick={() => setIsEditOpen(false)}
-                            >
-                                <i className="fa fa-times mr-1"></i>
-                                Close
-                            </button>
+                        {/* Date Due */}
+                        <div>
+                            <label className="text-sm font-medium">
+                                Date Due
+                            </label>
+                            <Input type="date" value={dateDue} readOnly />
+                        </div>
 
-                            <button
-                                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center justify-center border-2 border-green-800"
-                                onClick={handleUpdateChecklist}
-                            >
-                                <i className="fa fa-save mr-1"></i> Save
-                            </button>
+                        {/* Done By */}
+                        <div>
+                            <label className="text-sm font-medium">
+                                Done By
+                            </label>
+                            <Input value={performedBy} readOnly />
                         </div>
                     </div>
-                </div>
-            )}
+
+                    {/* TABLE */}
+                    <div className="border rounded-md mt-4 max-h-[95vh]">
+                        <Table>
+                            <TableHeader className="sticky top-0 bg-background">
+                                <TableRow>
+                                    <TableHead>#</TableHead>
+                                    <TableHead>Task</TableHead>
+                                    <TableHead>Description</TableHead>
+
+                                    <TableHead className="text-center">
+                                        OK
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "ok",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "ok"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
+                                    </TableHead>
+
+                                    <TableHead className="text-center">
+                                        REPAIR
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "repair",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "repair"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
+                                    </TableHead>
+
+                                    <TableHead className="text-center">
+                                        N/A
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "na",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "na"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {checklistItems.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{index + 1}</TableCell>
+                                        <TableCell>{item.task}</TableCell>
+                                        <TableCell className="whitespace-pre-line">
+                                            {item.description}
+                                        </TableCell>
+
+                                        {/* OK */}
+                                        <TableCell className="text-center">
+                                            <Checkbox
+                                                checked={item.status === "ok"}
+                                                onCheckedChange={() =>
+                                                    handleCheckboxChange(
+                                                        index,
+                                                        "ok",
+                                                    )
+                                                }
+                                            />
+                                        </TableCell>
+
+                                        {/* REPAIR */}
+                                        <TableCell className="text-center">
+                                            <Checkbox
+                                                checked={
+                                                    item.status === "repair"
+                                                }
+                                                onCheckedChange={() =>
+                                                    handleCheckboxChange(
+                                                        index,
+                                                        "repair",
+                                                    )
+                                                }
+                                            />
+                                        </TableCell>
+
+                                        {/* N/A */}
+                                        <TableCell className="text-center">
+                                            <Checkbox
+                                                checked={item.status === "na"}
+                                                onCheckedChange={() =>
+                                                    handleCheckboxChange(
+                                                        index,
+                                                        "na",
+                                                    )
+                                                }
+                                            />
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* RECOMMENDATIONS */}
+                    <div className="mt-4">
+                        <label className="text-sm font-medium">
+                            Recommendations
+                        </label>
+                        <Textarea
+                            value={recommendations}
+                            onChange={(e) => setRecommendations(e.target.value)}
+                            className="min-h-[120px]"
+                        />
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="flex justify-between text-xs text-red-800 mt-2">
+                        <span className="font-bold">
+                            TELFORD SVC PHILS., INC.
+                        </span>
+                        <span>MIS-03 (Rev.1)</span>
+                    </div>
+
+                    <DialogFooter className="flex gap-2 justify-end">
+                        <Button
+                            variant="destructive"
+                            onClick={() => setIsEditOpen(false)}
+                        >
+                            Close
+                        </Button>
+
+                        <Button
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={handleUpdateChecklist}
+                        >
+                            Save
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

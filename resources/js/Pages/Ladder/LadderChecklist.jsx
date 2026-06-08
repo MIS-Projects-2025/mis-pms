@@ -236,6 +236,12 @@ export default function LadderChecklist({
                 filters={tableFilters}
                 rowKey="id"
                 showExport={false}
+                tabKey="status"
+                tabs={[
+                    { label: "All", value: "" },
+                    { label: "Pending", value: "2" },
+                    { label: "Verified", value: "1" },
+                ]}
             />
 
             {/* =================CREATE MODAL ================= */}

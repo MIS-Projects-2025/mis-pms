@@ -318,6 +318,12 @@ export default function CctvChecklist({
                 filters={tableFilters}
                 rowKey="id"
                 showExport={false}
+                tabKey="status"
+                tabs={[
+                    { label: "All", value: "" },
+                    { label: "Pending", value: "2" },
+                    { label: "Done", value: "1" },
+                ]}
             />
 
             {/* CUSTOM MODAL */}

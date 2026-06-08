@@ -376,6 +376,12 @@ export default function PrinterChecklist({
                 filters={tableFilters}
                 rowKey="printer_name"
                 showExport={false}
+                tabKey="status"
+                tabs={[
+                    { label: "All", value: "" },
+                    { label: "Pending", value: "2" },
+                    { label: "Verified", value: "1" },
+                ]}
             />
 
             {/* Modal */}
@@ -795,7 +801,7 @@ export default function PrinterChecklist({
                                 </label>
                                 <div className="flex items-center gap-2">
                                     {!selectedChecklist.verified_by &&
-                                        ["1268"].includes(emp_data.emp_id) ? (
+                                    ["1268"].includes(emp_data.emp_id) ? (
                                         <>
                                             <input
                                                 type="text"

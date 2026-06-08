@@ -30,6 +30,9 @@ require __DIR__ . '/inventory.php';
 // Ladder routes
 require __DIR__ . '/ladder.php';
 
+// Export routes
+require __DIR__ . '/export.php';
+
 Route::get("/demo", [DemoController::class, 'index'])->name('demo');
 
 Route::fallback(function () {

@@ -78,15 +78,6 @@ class ComputerRepairController extends Controller
             'checklist',
             'computer_repair_tbl',
             [
-                'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
-
-                    if ($request->filled('status')) {
-                      $query->where('status', $request->status);
-                    }
-
-                return $query;
-                },
                 'searchColumns' => [
                     'tech_name',
                     'model',
@@ -115,7 +106,6 @@ class ComputerRepairController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
-                'status',
             ]),
         ]);
     }
@@ -209,7 +199,6 @@ class ComputerRepairController extends Controller
             'attachments' => json_encode($attachmentNames),
 
             'report_no' => $reportNo, // 👈 save generated report number
-            'status' => 2,
         ]);
 
         return redirect()->back()->with('success', 'Repair report saved.');

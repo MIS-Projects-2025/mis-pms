@@ -38,21 +38,13 @@ class ComputerChecklistController extends Controller
             'checklist',
             'computer_checklists',
             [
-                'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
-
-                    if ($request->filled('status')) {
-                      $query->where('status', $request->status);
-                    }
-
-                return $query;
+                'conditions' => function ($query) {
+                    return $query
+                        ->orderBy('id', 'DESC');
                 },
 
                 'searchColumns' => ['computer_name', 'date_checked', 'performed_by', 'recommendations'],
-                'status',
             ]
-
-
         );
 
         // FOR CSV EXPORTING
@@ -73,7 +65,6 @@ class ComputerChecklistController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
-                'status',
             ]),
         ]);
     }
@@ -83,7 +74,6 @@ class ComputerChecklistController extends Controller
         $items = $request->input('items'); // array from frontend
         $computerName = $request->input('computer_name');
         $recommendations = $request->input('recommendations');
-        $status = 2;
 
         if (empty($items) || !is_array($items)) {
             return redirect()->back()->with('error', 'No checklist items provided');
@@ -96,7 +86,6 @@ class ComputerChecklistController extends Controller
             'performed_by' => $request->input('performed_by') ?? session('emp_data.emp_name'),
             'items' => json_encode($items), // save as JSON
             'recommendations' => $recommendations ?? null,
-            'status' => $status ?? null,
         ]);
 
         return redirect()->route('computer-checklist')
@@ -118,7 +107,7 @@ class ComputerChecklistController extends Controller
             'recommendations' => 'nullable|string',
         ]);
 
-
+     
 
         // Check if checklist exists
         $checklist = DB::connection('checklist')->table('computer_checklists')->where('id', $id)->first();
@@ -149,7 +138,6 @@ class ComputerChecklistController extends Controller
             ->update([
                 'verified_by' => session('emp_data.emp_name'),
                 'date_verified' => date('Y-m-d H:i:s'),
-                'status' => 1,
             ]);
 
         return redirect()->route('computer-checklist')

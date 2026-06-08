@@ -35,9 +35,14 @@ class BoxingPrinterChecklistController extends Controller
             'checklist',
             'boxing_printer_checklists',
             [
-                'conditions' => function ($query) {
-                    return $query
-                        ->OrderBy('id', 'desc');
+                'conditions' => function ($query) use ($request) {
+                    $query->orderBy('id', 'DESC');
+
+                    if ($request->filled('status')) {
+                      $query->where('status', $request->status);
+                    }
+
+                return $query;
                 },
 
                 'searchColumns' => ['performed_by', 'date_performed', 'acknowledge_by'],
@@ -61,6 +66,7 @@ class BoxingPrinterChecklistController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
+                'status',
             ]),
         ]);
     }
@@ -99,6 +105,7 @@ class BoxingPrinterChecklistController extends Controller
             'date_performed' => $request->date_performed,
             'items'          => json_encode($request->items),  // → SAVE JSON
             'shift'          => $shift,
+            'status'         => 2,
         ]);
 
         return redirect()->route('boxing-printer-checklist')
@@ -138,6 +145,7 @@ class BoxingPrinterChecklistController extends Controller
             ->update([
                 'verified_by' => $approvedBy,
                 'date_verified' => (new DateTime())->format('m/d/Y H:i'),
+                'status' => 1,
             ]);
 
         return redirect()->back()->with('success', 'Approved successfully.');

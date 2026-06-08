@@ -169,8 +169,6 @@ export default function ComputerRepair({
         });
     };
 
-
-
     const dataWithAction = tableData.data.map((item) => ({
         ...item,
         // 🔸 Action buttons
@@ -229,12 +227,6 @@ export default function ComputerRepair({
                 filters={tableFilters}
                 rowKey="id"
                 showExport={false}
-                tabKey="status"
-                tabs={[
-                    { label: "All", value: "" },
-                    { label: "Pending", value: "2" },
-                    { label: "Done", value: "1" },
-                ]}
             />
 
             {/* /////////////// NEW FORM //////////////  */}
@@ -571,6 +563,7 @@ export default function ComputerRepair({
                 open={openViewDrawer}
                 onClose={() => setOpenViewDrawer(false)}
                 destroyOnClose
+
             >
                 <div className="flex justify-end pt-4">
                     <Button
@@ -660,7 +653,7 @@ export default function ComputerRepair({
                         <Divider titlePlacement="left">Attachments</Divider>
 
                         {viewData.attachments &&
-                        JSON.parse(viewData.attachments).length > 0 ? (
+                            JSON.parse(viewData.attachments).length > 0 ? (
                             <div className="grid grid-cols-3 gap-3">
                                 {JSON.parse(viewData.attachments).map(
                                     (img, index) => (
