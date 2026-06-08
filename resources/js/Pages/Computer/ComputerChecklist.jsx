@@ -10,7 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 
 import {
     Table,
@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label} from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 
 import {
     Select,
@@ -603,9 +603,8 @@ export default function ComputerChecklist({
                         <Button
                             onClick={handleSaveChecklist}
                             disabled={!canSave}
-                            className={`flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ${
-                                !canSave ? "hidden" : ""
-                            }`}
+                            className={`flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ${!canSave ? "hidden" : ""
+                                }`}
                         >
                             <Save className="h-4 w-4" />
                             Submit
@@ -666,8 +665,8 @@ export default function ComputerChecklist({
                                     value={
                                         viewItem.date_checked
                                             ? new Date(
-                                                  viewItem.date_checked,
-                                              ).toLocaleDateString("en-US")
+                                                viewItem.date_checked,
+                                            ).toLocaleDateString("en-US")
                                             : "-"
                                     }
                                 />
@@ -678,8 +677,8 @@ export default function ComputerChecklist({
                                     value={
                                         viewItem.date_due
                                             ? new Date(
-                                                  viewItem.date_due,
-                                              ).toLocaleDateString("en-US")
+                                                viewItem.date_due,
+                                            ).toLocaleDateString("en-US")
                                             : "-"
                                     }
                                 />
@@ -693,7 +692,7 @@ export default function ComputerChecklist({
                                 {/* VERIFIED */}
                                 <div className="flex items-center gap-2">
                                     {!viewItem.verified_by &&
-                                    ["1268"].includes(emp_data.emp_id) ? (
+                                        ["1268"].includes(emp_data.emp_id) ? (
                                         <>
                                             <Input
                                                 readOnly
@@ -868,7 +867,7 @@ export default function ComputerChecklist({
                                 Date Done
                             </label>
                             <Input type="date" value={dateChecked}
-                            onChange={(e) => setDateChecked(e.target.value)} required />
+                                onChange={(e) => setDateChecked(e.target.value)} required />
                         </div>
 
                         {/* Date Due */}

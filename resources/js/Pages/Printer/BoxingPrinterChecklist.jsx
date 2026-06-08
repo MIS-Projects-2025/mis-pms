@@ -13,7 +13,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 
 import { X, Check, CheckCheck, FileText, Save, Plus, Send } from "lucide-react";
 import {
@@ -183,8 +183,8 @@ export default function BoxingPrinterChecklist({
             Array.isArray(item.items)
                 ? item.items
                 : typeof item.items === "string"
-                  ? JSON.parse(item.items)
-                  : []
+                    ? JSON.parse(item.items)
+                    : []
         ).map((i) => ({
             station_name: i.station_name || i.item || "",
             check_internal: i.check_internal ?? false,
@@ -329,11 +329,10 @@ export default function BoxingPrinterChecklist({
                 {!["boxing"].includes(emp_data?.emp_system_role) && (
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className={`${
-                            isButtonDisabled()
+                        className={`${isButtonDisabled()
                                 ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
                                 : "text-white"
-                        } bg-green-500 border-green-900 btn hover:bg-green-700`}
+                            } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
                         {isButtonDisabled() ? (
@@ -602,8 +601,8 @@ export default function BoxingPrinterChecklist({
                                 value={
                                     selectedChecklist?.date_performed
                                         ? formatMMDDYYYY(
-                                              selectedChecklist.date_performed,
-                                          )
+                                            selectedChecklist.date_performed,
+                                        )
                                         : ""
                                 }
                             />
