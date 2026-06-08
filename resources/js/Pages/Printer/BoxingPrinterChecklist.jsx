@@ -4,9 +4,9 @@ import DataTable from "@/Components/DataTable";
 import { useState } from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Checkbox } from "@/Components/ui/checkbox";
 
 import {
     Dialog,
@@ -23,7 +23,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "@/Components/ui/table";
 
 export default function BoxingPrinterChecklist({
     tableData,
@@ -330,8 +330,8 @@ export default function BoxingPrinterChecklist({
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className={`${isButtonDisabled()
-                                ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
-                                : "text-white"
+                            ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
+                            : "text-white"
                             } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
