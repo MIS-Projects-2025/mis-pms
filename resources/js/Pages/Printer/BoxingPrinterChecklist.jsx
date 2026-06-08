@@ -571,10 +571,10 @@ const dataWithAction = tableData.data.map((item) => {
                         !["boxing"].includes(emp_data.emp_system_role) && (
                             <div className="flex justify-end">
                                 <Button
-                                    variant="outline"
+                                    className="flex items-center bg-red-600 hover:bg-red-700 text-white mb-4"
                                     onClick={() =>
                                         window.open(
-                                            `/boxing-printer-checklist/pdf/${selectedChecklist.id}`,
+                                            `boxing-printer-checklist/pdf/${selectedChecklist.id}`,
                                             "_blank",
                                         )
                                     }
@@ -722,6 +722,7 @@ const dataWithAction = tableData.data.map((item) => {
                             )}
 
                         {!selectedChecklist?.verified_by?.trim() &&
+                            selectedChecklist?.acknowledged_by?.trim() &&
                             emp_data?.emp_id === "1268" && (
                                 <Button
                                     onClick={() =>
