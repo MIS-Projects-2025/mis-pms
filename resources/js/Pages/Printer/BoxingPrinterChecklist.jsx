@@ -4,16 +4,16 @@ import DataTable from "@/Components/DataTable";
 import { useState } from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Checkbox } from "@/Components/ui/checkbox";
 
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/Components/ui/dialog";
 
 import { X, Check, CheckCheck, FileText, Save, Plus, Send } from "lucide-react";
 import {
@@ -23,7 +23,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "@/Components/ui/table";
 
 export default function BoxingPrinterChecklist({
     tableData,
@@ -183,8 +183,8 @@ export default function BoxingPrinterChecklist({
             Array.isArray(item.items)
                 ? item.items
                 : typeof item.items === "string"
-                  ? JSON.parse(item.items)
-                  : []
+                    ? JSON.parse(item.items)
+                    : []
         ).map((i) => ({
             station_name: i.station_name || i.item || "",
             check_internal: i.check_internal ?? false,
@@ -329,11 +329,10 @@ export default function BoxingPrinterChecklist({
                 {!["boxing"].includes(emp_data?.emp_system_role) && (
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className={`${
-                            isButtonDisabled()
-                                ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
-                                : "text-white"
-                        } bg-green-500 border-green-900 btn hover:bg-green-700`}
+                        className={`${isButtonDisabled()
+                            ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
+                            : "text-white"
+                            } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
                         {isButtonDisabled() ? (
@@ -602,8 +601,8 @@ export default function BoxingPrinterChecklist({
                                 value={
                                     selectedChecklist?.date_performed
                                         ? formatMMDDYYYY(
-                                              selectedChecklist.date_performed,
-                                          )
+                                            selectedChecklist.date_performed,
+                                        )
                                         : ""
                                 }
                             />
