@@ -4,34 +4,26 @@ import DataTable from "@/Components/DataTable";
 import { useState } from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-            import { Button } from "@/components/ui/button";
-            import { Input } from "@/components/ui/input";
-            import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Checkbox } from "@/Components/ui/checkbox";
 
-            import {
-                Dialog,
-                DialogContent,
-                DialogHeader,
-                DialogTitle,
-            } from "@/components/ui/dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/Components/ui/dialog";
 
-            import {
-                X,
-                Check,
-                CheckCheck,
-                FileText,
-                Save,
-                Plus,
-                Send,
-            } from "lucide-react";
-            import {
-                Table,
-                TableBody,
-                TableCell,
-                TableHead,
-                TableHeader,
-                TableRow,
-            } from "@/components/ui/table";
+import { X, Check, CheckCheck, FileText, Save, Plus, Send } from "lucide-react";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/Components/ui/table";
 
 export default function BoxingPrinterChecklist({
     tableData,
@@ -54,9 +46,7 @@ export default function BoxingPrinterChecklist({
 
     // STATE FOR FORM
     const [performedBy] = useState(emp_data.emp_name);
-    const [datePerformed] = useState(
-        new Date().toLocaleDateString("en-CA")
-    );
+    const [datePerformed] = useState(new Date().toLocaleDateString("en-CA"));
 
     // STATE PER ROW
     const [rows, setRows] = useState(
@@ -186,99 +176,103 @@ export default function BoxingPrinterChecklist({
         return color;
     }
 
-const dataWithAction = tableData.data.map((item) => {
-    const [dueYear, dueMonth, dueDay] = item.date_performed.split("-");
+    const dataWithAction = tableData.data.map((item) => {
+        const [dueYear, dueMonth, dueDay] = item.date_performed.split("-");
 
-    const parsedItems = (
-        Array.isArray(item.items)
-            ? item.items
-            : typeof item.items === "string"
-              ? JSON.parse(item.items)
-              : []
-    ).map((i) => ({
-        station_name: i.station_name || i.item || "",
-        check_internal: i.check_internal ?? false,
-        replace_ribbon: i.replace_ribbon ?? false,
-        restart_calib: i.restart_calib ?? false,
-        remarks: i.remarks || "",
-    }));
+        const parsedItems = (
+            Array.isArray(item.items)
+                ? item.items
+                : typeof item.items === "string"
+                    ? JSON.parse(item.items)
+                    : []
+        ).map((i) => ({
+            station_name: i.station_name || i.item || "",
+            check_internal: i.check_internal ?? false,
+            replace_ribbon: i.replace_ribbon ?? false,
+            restart_calib: i.restart_calib ?? false,
+            remarks: i.remarks || "",
+        }));
 
-    const openViewModal = () => {
-        setSelectedChecklist({
-            ...item,
-            items: parsedItems,
-        });
+        const openViewModal = () => {
+            setSelectedChecklist({
+                ...item,
+                items: parsedItems,
+            });
 
-        setIsViewOpen(true);
-    };
+            setIsViewOpen(true);
+        };
 
-    const openEditModal = () => {
-        setSelectedChecklist({
-            ...item,
-            items: parsedItems,
-        });
+        const openEditModal = () => {
+            setSelectedChecklist({
+                ...item,
+                items: parsedItems,
+            });
 
-        setIsEditOpen(true);
-    };
+            setIsEditOpen(true);
+        };
 
-    const canEdit =
-        (!item.acknowledged_by?.trim() &&
+        const canEdit =
+            (!item.acknowledged_by?.trim() &&
+                !item.verified_by?.trim() &&
+                item.performed_by === emp_data?.emp_name) ||
+            (!item.verified_by?.trim() && emp_data?.emp_id === "1268");
+
+        const canDelete =
+            !item.acknowledged_by?.trim() &&
             !item.verified_by?.trim() &&
-            item.performed_by === emp_data?.emp_name) ||
-        (!item.verified_by?.trim() && emp_data?.emp_id === "1268");
+            item.performed_by === emp_data?.emp_name;
 
-    const canDelete =
-        !item.acknowledged_by?.trim() &&
-        !item.verified_by?.trim() &&
-        item.performed_by === emp_data?.emp_name;
+        return {
+            ...item,
 
-    return {
-        ...item,
+            shift: (
+                <span
+                    className="px-2 py-1 text-xs font-semibold border rounded-md"
+                    style={{
+                        color: getShiftColor(item.shift).text,
+                        backgroundColor: getShiftColor(item.shift).bg,
+                        borderColor: getShiftColor(item.shift).border,
+                    }}
+                >
+                    {item.shift || "-"}
+                </span>
+            ),
 
-        shift: (
-            <span
-                className="px-2 py-1 text-xs font-semibold border rounded-md"
-                style={{
-                    color: getShiftColor(item.shift).text,
-                    backgroundColor: getShiftColor(item.shift).bg,
-                    borderColor: getShiftColor(item.shift).border,
-                }}
-            >
-                {item.shift || "-"}
-            </span>
-        ),
+            date_performed: `${dueMonth}/${dueDay}/${dueYear}`,
 
-        date_performed: `${dueMonth}/${dueDay}/${dueYear}`,
-
-        actions: (
-            <div className="flex gap-1">
-                <Button size="icon" className="bg-blue-500 text-white hover:bg-blue-500/80" onClick={openViewModal}>
-                    <Eye className="h-4 w-4" />
-                </Button>
-
-                {canEdit && (
+            actions: (
+                <div className="flex gap-1">
                     <Button
                         size="icon"
-                        className="bg-amber-500 text-white hover:bg-amber-500/80"
-                        onClick={openEditModal}
+                        className="bg-blue-500 text-white hover:bg-blue-500/80"
+                        onClick={openViewModal}
                     >
-                        <Pencil className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                     </Button>
-                )}
 
-                {canDelete && (
-                    <Button
-                        size="icon"
-                        className="bg-red-600 text-white hover:bg-red-500/80"
-                        onClick={() => handleDelete(item.id)}
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-        ),
-    };
-});
+                    {canEdit && (
+                        <Button
+                            size="icon"
+                            className="bg-amber-500 text-white hover:bg-amber-500/80"
+                            onClick={openEditModal}
+                        >
+                            <Pencil className="h-4 w-4" />
+                        </Button>
+                    )}
+
+                    {canDelete && (
+                        <Button
+                            size="icon"
+                            className="bg-red-600 text-white hover:bg-red-500/80"
+                            onClick={() => handleDelete(item.id)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
+                </div>
+            ),
+        };
+    });
 
     const getCurrentShift = () => {
         const now = new Date();
@@ -335,11 +329,10 @@ const dataWithAction = tableData.data.map((item) => {
                 {!["boxing"].includes(emp_data?.emp_system_role) && (
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className={`${
-                            isButtonDisabled()
-                                ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
-                                : "text-white"
-                        } bg-green-500 border-green-900 btn hover:bg-green-700`}
+                        className={`${isButtonDisabled()
+                            ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
+                            : "text-white"
+                            } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
                         {isButtonDisabled() ? (
@@ -608,8 +601,8 @@ const dataWithAction = tableData.data.map((item) => {
                                 value={
                                     selectedChecklist?.date_performed
                                         ? formatMMDDYYYY(
-                                              selectedChecklist.date_performed,
-                                          )
+                                            selectedChecklist.date_performed,
+                                        )
                                         : ""
                                 }
                             />
