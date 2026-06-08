@@ -79,9 +79,14 @@ class PrinterChecklistController extends Controller
             'checklist',
             'printer_checklists',
             [
-                'conditions' => function ($query) {
-                    return $query
-                        ->orderBy('id', 'desc');
+                'conditions' => function ($query) use ($request) {
+                    $query->orderBy('id', 'DESC');
+
+                    if ($request->filled('status')) {
+                      $query->where('status', $request->status);
+                    }
+
+                return $query;
                 },
 
                 'searchColumns' => ['pm_date', 'performed_by', 'printer_name', 'serial_num', 'location', 'next_pm'],
@@ -106,6 +111,7 @@ class PrinterChecklistController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
+                'status',
             ]),
         ]);
     }
@@ -133,6 +139,7 @@ class PrinterChecklistController extends Controller
             'next_pm' => $request->input('next_pm'),
             'items' => json_encode($request->input('items')), // save checklist items as JSON
             'recommendations' => $request->input('recommendations') ?? null,
+            'status' => 2,
         ]);
 
         return redirect()->route('printer-checklist')
@@ -146,6 +153,7 @@ class PrinterChecklistController extends Controller
             ->update([
                 'verified_by' => session('emp_data.emp_name'),
                 'date_verified' => date('Y-m-d H:i:s'),
+                'status' => 1,
             ]);
 
         return redirect()->back()

@@ -37,10 +37,15 @@ class CctvChecklistController extends Controller
             'checklist',
             'cctv_checklists',
             [
-                // 'conditions' => function ($query) {
-                //     return $query
-                //         ->whereIn('emp_role', ['admin', 'boxing']);
-                // },
+                'conditions' => function ($query) use ($request) {
+                    $query->orderBy('id', 'DESC');
+
+                    if ($request->filled('status')) {
+                      $query->where('status', $request->status);
+                    }
+
+                return $query;
+                },
 
                 'searchColumns' => ['camera_name', 'control_no', 'location', 'due_date', 'performed_by'],
             ]
@@ -66,6 +71,7 @@ class CctvChecklistController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
+                'status',
             ]),
         ]);
     }
@@ -98,6 +104,7 @@ class CctvChecklistController extends Controller
             'check_items' => $validated['check_items'],
             'remarks' => $validated['remarks'] ?? '',
             'recommendation' => $validated['recommendation'] ?? '',
+            'status' => 2,
         ]);
 
         // Return response
@@ -167,6 +174,7 @@ class CctvChecklistController extends Controller
             ->update([
                 'verified_by' => session('emp_data.emp_name'),
                 'date_verified' => date('Y-m-d H:i:s'),
+                'status' => 1,
             ]);
 
         return redirect()->back()

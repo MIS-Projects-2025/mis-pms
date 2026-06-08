@@ -3,7 +3,35 @@ import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState } from "react";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/Components/ui/button";
+
+            import { Button } from "@/components/ui/button";
+            import { Input } from "@/components/ui/input";
+            import { Checkbox } from "@/components/ui/checkbox";
+
+            import {
+                Dialog,
+                DialogContent,
+                DialogHeader,
+                DialogTitle,
+            } from "@/components/ui/dialog";
+
+            import {
+                X,
+                Check,
+                CheckCheck,
+                FileText,
+                Save,
+                Plus,
+                Send,
+            } from "lucide-react";
+            import {
+                Table,
+                TableBody,
+                TableCell,
+                TableHead,
+                TableHeader,
+                TableRow,
+            } from "@/components/ui/table";
 
 export default function BoxingPrinterChecklist({
     tableData,
@@ -158,136 +186,99 @@ export default function BoxingPrinterChecklist({
         return color;
     }
 
-    const dataWithAction = tableData.data.map((item) => {
-        const [dueYear, dueMonth, dueDay] = item.date_performed.split("-");
+const dataWithAction = tableData.data.map((item) => {
+    const [dueYear, dueMonth, dueDay] = item.date_performed.split("-");
 
-        return {
+    const parsedItems = (
+        Array.isArray(item.items)
+            ? item.items
+            : typeof item.items === "string"
+              ? JSON.parse(item.items)
+              : []
+    ).map((i) => ({
+        station_name: i.station_name || i.item || "",
+        check_internal: i.check_internal ?? false,
+        replace_ribbon: i.replace_ribbon ?? false,
+        restart_calib: i.restart_calib ?? false,
+        remarks: i.remarks || "",
+    }));
+
+    const openViewModal = () => {
+        setSelectedChecklist({
             ...item,
-            shift: (
-                <span
-                    className={`px-2 py-1 text-xs font-semibold border rounded-md`}
-                    style={{
-                        color: getShiftColor(item.shift).text,
-                        backgroundColor: getShiftColor(item.shift).bg,
-                        borderColor: getShiftColor(item.shift).border,
-                    }}
-                >
-                    {item.shift || "-"}
-                </span>
-            ),
-            date_performed: `${dueMonth}/${dueDay}/${dueYear}`,
-            actions: (
-                <div className="flex space-x-1">
-                    {/* VIEW BUTTON */}
+            items: parsedItems,
+        });
+
+        setIsViewOpen(true);
+    };
+
+    const openEditModal = () => {
+        setSelectedChecklist({
+            ...item,
+            items: parsedItems,
+        });
+
+        setIsEditOpen(true);
+    };
+
+    const canEdit =
+        (!item.acknowledged_by?.trim() &&
+            !item.verified_by?.trim() &&
+            item.performed_by === emp_data?.emp_name) ||
+        (!item.verified_by?.trim() && emp_data?.emp_id === "1268");
+
+    const canDelete =
+        !item.acknowledged_by?.trim() &&
+        !item.verified_by?.trim() &&
+        item.performed_by === emp_data?.emp_name;
+
+    return {
+        ...item,
+
+        shift: (
+            <span
+                className="px-2 py-1 text-xs font-semibold border rounded-md"
+                style={{
+                    color: getShiftColor(item.shift).text,
+                    backgroundColor: getShiftColor(item.shift).bg,
+                    borderColor: getShiftColor(item.shift).border,
+                }}
+            >
+                {item.shift || "-"}
+            </span>
+        ),
+
+        date_performed: `${dueMonth}/${dueDay}/${dueYear}`,
+
+        actions: (
+            <div className="flex gap-1">
+                <Button size="icon" className="bg-blue-500 text-white hover:bg-blue-500/80" onClick={openViewModal}>
+                    <Eye className="h-4 w-4" />
+                </Button>
+
+                {canEdit && (
                     <Button
-                        size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
-                        onClick={() => {
-                            setSelectedChecklist({
-                                ...item,
-                                items: (Array.isArray(item.items)
-                                    ? item.items
-                                    : typeof item.items === "string"
-                                        ? JSON.parse(item.items)
-                                        : []
-                                ).map((i) => ({
-                                    station_name:
-                                        i.station_name || i.items || "",
-                                    check_internal: i.check_internal || false,
-                                    replace_ribbon: i.replace_ribbon || false,
-                                    restart_calib: i.restart_calib || false,
-                                    remarks: i.remarks || "",
-                                })),
-                            });
-                            setIsViewOpen(true);
-                        }}
+                        size="icon"
+                        className="bg-amber-500 text-white hover:bg-amber-500/80"
+                        onClick={openEditModal}
                     >
-                        <Eye className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" />
                     </Button>
+                )}
 
-                    {(!item.verified_by || item.verified_by.trim() === "") &&
-                        emp_data?.emp_id === "1268" && (
-                            <Button
-                                size="sm"
-                                className="bg-amber-500 hover:bg-amber-600 text-white"
-                                onClick={() => {
-                                    setSelectedChecklist({
-                                        ...item,
-                                        items: (Array.isArray(item.items)
-                                            ? item.items
-                                            : typeof item.items === "string"
-                                                ? JSON.parse(item.items)
-                                                : []
-                                        ).map((i) => ({
-                                            station_name:
-                                                i.station_name || i.item || "",
-                                            check_internal:
-                                                i.check_internal || false,
-                                            replace_ribbon:
-                                                i.replace_ribbon || false,
-                                            restart_calib:
-                                                i.restart_calib || false,
-                                            remarks: i.remarks || "",
-                                        })),
-                                    });
-                                    setIsEditOpen(true);
-                                }}
-                            >
-                                <Pencil className="h-4 w-4" />
-                            </Button>
-                        )}
-
-                    {/* DELETE EDIT ONLY IF acknowledge_by IS EMPTY */}
-                    {(!item.acknowledged_by ||
-                        item.acknowledged_by.trim() === "") &&
-                        (!item.verified_by || item.verified_by.trim() === "") &&
-                        item.performed_by === emp_data?.emp_name && (
-                            <Button
-                                size="sm"
-                                className="bg-amber-600 hover:bg-amber-700 text-white"
-                                onClick={() => {
-                                    setSelectedChecklist({
-                                        ...item,
-                                        items: (Array.isArray(item.items)
-                                            ? item.items
-                                            : typeof item.items === "string"
-                                                ? JSON.parse(item.items)
-                                                : []
-                                        ).map((i) => ({
-                                            station_name:
-                                                i.station_name || i.item || "",
-                                            check_internal:
-                                                i.check_internal || false,
-                                            replace_ribbon:
-                                                i.replace_ribbon || false,
-                                            restart_calib:
-                                                i.restart_calib || false,
-                                            remarks: i.remarks || "",
-                                        })),
-                                    });
-                                    setIsEditOpen(true);
-                                }}
-                            >
-                                <Pencil className="h-4 w-4" />
-                            </Button>
-                        )}
-                    {/* DELETE BUTTON ONLY IF acknowledge_by IS EMPTY */}
-                    {(!item.acknowledged_by ||
-                        item.acknowledged_by.trim() === "") &&
-                        (!item.verified_by || item.verified_by.trim() === "") &&
-                        item.performed_by === emp_data?.emp_name && (
-                            <Button
-                                size="sm"
-                                className="bg-red-600 hover:bg-red-700 text-white"
-                                onClick={() => handleDelete(item.id)}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                        )}
-                </div>
-            ),
-        };
-    });
+                {canDelete && (
+                    <Button
+                        size="icon"
+                        className="bg-red-600 text-white hover:bg-red-500/80"
+                        onClick={() => handleDelete(item.id)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                )}
+            </div>
+        ),
+    };
+});
 
     const getCurrentShift = () => {
         const now = new Date();
@@ -344,10 +335,11 @@ export default function BoxingPrinterChecklist({
                 {!["boxing"].includes(emp_data?.emp_system_role) && (
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className={`${isButtonDisabled()
-                            ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
-                            : "text-white"
-                            } bg-green-500 border-green-900 btn hover:bg-green-700`}
+                        className={`${
+                            isButtonDisabled()
+                                ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
+                                : "text-white"
+                        } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
                         {isButtonDisabled() ? (
@@ -388,147 +380,145 @@ export default function BoxingPrinterChecklist({
                 filters={tableFilters}
                 rowKey="performed_by"
                 showExport={false}
+                tabKey="status"
+                tabs={[
+                    { label: "All", value: "" },
+                    { label: "Pending", value: "2" },
+                    { label: "Verified", value: "1" },
+                ]}
             />
 
             {/* ========================= */}
             {/*        NEW MODAL         */}
             {/* ========================= */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex justify-center items-start bg-black bg-opacity-50 overflow-y-auto p-4">
-                    <div className="bg-white dark:bg-red-800 text-gray-800 w-full max-w-6xl rounded-lg shadow-lg p-6 mt-10 animate-fadeInScale">
-                        {/* HEADER */}
-                        <div className="flex justify-between items-center border-b pb-3">
-                            <h2 className="text-xl font-bold font-[Poppins] ">
-                                <i className="fas fa-plus"></i> New Checklist
-                            </h2>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Plus className="h-5 w-5" />
+                            New Checklist
+                        </DialogTitle>
+                    </DialogHeader>
 
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="text-red-600 text-xl hover:text-red-800"
-                            >
-                                ✕
-                            </button>
-                        </div>
+                    {/* FORM FIELDS */}
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Done By
+                                </label>
 
-                        {/* FORM FIELDS */}
-                        <div className="mt-4">
-                            <div className="grid grid-cols-3 gap-4 mb-5">
-                                <div>
-                                    <label className="font-semibold">
-                                        Done By
-                                    </label>
-                                    <input
-                                        className="input border-gray-400 w-full bg-gray-100 cursor-not-allowed"
-                                        value={performedBy}
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">Date Done</label>
-                                    <input
-                                        type="date"
-                                        className="input border-gray-400 w-full bg-gray-100 cursor-not-allowed"
-                                        value={datePerformed}
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">
-                                        Acknowledged By
-                                    </label>
-                                    <p className="text-xs font-semibold mt-2 text-red-600">
-                                        Acknowledgment will happen after
-                                        submitting this form...
-                                    </p>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-200 cursor-not-allowed hidden"
-                                        readOnly
-                                    />
-                                </div>
+                                <Input
+                                    value={performedBy}
+                                    readOnly
+                                    className="bg-muted"
+                                />
                             </div>
 
-                            {/* TABLE */}
-                            <table className="table w-full border border-gray-300 mt-4 text-center border-collapse">
-                                <thead className="bg-gray-200 text-gray-700">
-                                    <tr>
-                                        <th className="border border-gray-300">
-                                            STATION NAME
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            CHECK (Internal parts)
-                                        </th>
-                                        <th className="border border-gray-300">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Date Done
+                                </label>
+
+                                <Input
+                                    type="date"
+                                    value={datePerformed}
+                                    readOnly
+                                    className="bg-muted"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Acknowledged By
+                                </label>
+
+                                <p className="text-xs text-muted-foreground">
+                                    Acknowledgment will happen after submitting
+                                    this form.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* TABLE */}
+                        <div className="border rounded-md overflow-hidden">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>STATION NAME</TableHead>
+
+                                        <TableHead className="text-center">
+                                            CHECK (Internal Parts)
+                                        </TableHead>
+
+                                        <TableHead className="text-center">
                                             REPLACE RIBBON / P2 LABEL
-                                        </th>
-                                        <th className="border border-gray-300">
+                                        </TableHead>
+
+                                        <TableHead className="text-center">
                                             RESTART / CALIBRATE
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            REMARKS
-                                        </th>
-                                    </tr>
-                                </thead>
+                                        </TableHead>
 
-                                <tbody>
+                                        <TableHead>REMARKS</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+
+                                <TableBody>
                                     {rows.map((row) => (
-                                        <tr key={row.id}>
-                                            <td className="border border-gray-300 font-semibold">
+                                        <TableRow key={row.id}>
+                                            <TableCell className="font-medium">
                                                 {row.station_name}
-                                            </td>
+                                            </TableCell>
 
-                                            <td className="border border-gray-300">
-                                                <input
-                                                    type="checkbox"
-                                                    className="checkbox border-gray-800 text-gray-800"
+                                            <TableCell className="text-center">
+                                                <Checkbox
                                                     checked={row.check_internal}
-                                                    onChange={(e) =>
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
                                                         updateRow(
                                                             row.id,
                                                             "check_internal",
-                                                            e.target.checked,
+                                                            !!checked,
                                                         )
                                                     }
                                                 />
-                                            </td>
+                                            </TableCell>
 
-                                            <td className="border border-gray-300">
-                                                <input
-                                                    type="checkbox"
-                                                    className="checkbox border-gray-800 text-gray-800"
+                                            <TableCell className="text-center">
+                                                <Checkbox
                                                     checked={row.replace_ribbon}
-                                                    onChange={(e) =>
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
                                                         updateRow(
                                                             row.id,
                                                             "replace_ribbon",
-                                                            e.target.checked,
+                                                            !!checked,
                                                         )
                                                     }
                                                 />
-                                            </td>
+                                            </TableCell>
 
-                                            <td className="border border-gray-300">
-                                                <input
-                                                    type="checkbox"
-                                                    className="checkbox border-gray-800 text-gray-800"
+                                            <TableCell className="text-center">
+                                                <Checkbox
                                                     checked={
                                                         row.restart_calibrate
                                                     }
-                                                    onChange={(e) =>
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
                                                         updateRow(
                                                             row.id,
                                                             "restart_calibrate",
-                                                            e.target.checked,
+                                                            !!checked,
                                                         )
                                                     }
                                                 />
-                                            </td>
+                                            </TableCell>
 
-                                            <td className="border border-gray-300">
-                                                <input
-                                                    type="text"
-                                                    className="input border-gray-500 w-full bg-white"
+                                            <TableCell>
+                                                <Input
                                                     value={row.remarks}
                                                     placeholder="Remarks..."
                                                     onChange={(e) =>
@@ -539,348 +529,317 @@ export default function BoxingPrinterChecklist({
                                                         )
                                                     }
                                                 />
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
 
-                        {/* FOOTER BUTTONS */}
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                className="btn bg-red-600 hover:bg-red-700 text-white mr-3 rounded-md"
+                        {/* FOOTER */}
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="destructive"
                                 onClick={() => setIsModalOpen(false)}
                             >
-                                <i className="fa-solid fa-xmark"></i>
+                                <X className="h-4 w-4 mr-2" />
                                 Cancel
-                            </button>
+                            </Button>
 
-                            <button
-                                className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                                onClick={handleSave}
-                            >
-                                <i className="fa-solid fa-paper-plane"></i>
+                            <Button onClick={handleSave}>
+                                <Send className="h-4 w-4 mr-2" />
                                 Submit
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
 
             {/* ========================= */}
             {/*        VIEW MODAL         */}
             {/* ========================= */}
-            {isViewOpen && selectedChecklist && (
-                <div className="fixed inset-0 z-50 flex justify-center items-start bg-black bg-opacity-50 overflow-y-auto p-4">
-                    <div className="bg-white w-full max-w-6xl rounded-lg shadow-lg p-6 mt-10 animate-fadeInScale">
-                        {/* HEADER */}
-                        <div className="flex justify-end items-center pb-3">
-                            <button
-                                onClick={() => setIsViewOpen(false)}
-                                className="text-red-600 text-xl hover:text-red-800 focus:outline-none"
-                            >
-                                <i className="fa-solid fa-xmark text-2xl"></i>
-                            </button>
-                        </div>
-
-                        <h1 className="text-2xl font-bold font-[Poppins] text-center text-red-800 uppercase">
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl font-bold text-red-800 uppercase">
                             BOXING PRINTER STARTUP CHECKLIST
-                        </h1>
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        {selectedChecklist.verified_by &&
-                            selectedChecklist.verified_by.trim() !== "" &&
-                            !["boxing"].includes(emp_data.emp_system_role) && (
-                                <div className="flex items-center justify-end mb-4">
-                                    <button
-                                        onClick={() =>
-                                            window.open(
-                                                `boxing-printer-checklist/pdf/${selectedChecklist.id}`,
-                                                "_blank",
-                                            )
-                                        }
-                                        className="px-3 py-2 bg-gray-100 text-red-600 rounded shadow hover:bg-red-700 hover:text-white border-2 border-red-600 hover:border-gray-500 flex items-center font-bold"
-                                    >
-                                        <i className="fa fa-file-pdf mr-1"></i>{" "}
-                                        View as PDF
-                                    </button>
-                                </div>
-                            )}
-
-                        {/* FORM FIELDS */}
-                        <div className="mt-4">
-                            <div className="grid grid-cols-4 gap-4 mb-5">
-                                <div>
-                                    <label className="font-semibold">
-                                        Done By
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
-                                        value={selectedChecklist.performed_by}
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">
-                                        Date
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
-                                        value={
-                                            selectedChecklist.date_performed
-                                                ? formatMMDDYYYY(
-                                                    selectedChecklist.date_performed,
-                                                )
-                                                : ""
-                                        }
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">
-                                        Acknowledged By
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
-                                        value={
-                                            selectedChecklist.acknowledged_by ||
-                                            "Waiting for acknowledgement"
-                                        }
-                                        readOnly
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">
-                                        Verified By
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-100 cursor-not-allowed"
-                                        value={
-                                            selectedChecklist.verified_by ||
-                                            "Waiting for verification"
-                                        }
-                                        readOnly
-                                    />
-                                </div>
+                    {/* PDF BUTTON */}
+                    {selectedChecklist?.verified_by?.trim() &&
+                        !["boxing"].includes(emp_data.emp_system_role) && (
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    onClick={() =>
+                                        window.open(
+                                            `/boxing-printer-checklist/pdf/${selectedChecklist.id}`,
+                                            "_blank",
+                                        )
+                                    }
+                                >
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    View PDF
+                                </Button>
                             </div>
+                        )}
 
-                            {/* TABLE */}
-                            <table className="table w-full border border-gray-300 mt-4 text-center">
-                                <thead className="bg-stone-100">
-                                    <tr>
-                                        <th className="border border-gray-300">
-                                            STATION NAME
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            CHECK (Internal parts)
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            REPLACE RIBBON / P2 LABEL
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            RESTART / CALIBRATE
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            REMARKS
-                                        </th>
-                                    </tr>
-                                </thead>
+                    {/* DETAILS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                                Done By
+                            </label>
 
-                                <tbody>
-                                    {selectedChecklist.items.map(
-                                        (row, index) => (
-                                            <tr key={index}>
-                                                <td className="border border-gray-300 font-semibold">
-                                                    {row.station_name}
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    {row.check_internal
-                                                        ? "✔"
-                                                        : ""}
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    {row.replace_ribbon
-                                                        ? "✔"
-                                                        : ""}
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    {row.restart_calib
-                                                        ? "✔"
-                                                        : ""}
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    {row.remarks}
-                                                </td>
-                                            </tr>
-                                        ),
-                                    )}
-                                </tbody>
-                            </table>
+                            <Input
+                                readOnly
+                                value={selectedChecklist?.performed_by ?? ""}
+                                className="bg-muted"
+                            />
                         </div>
 
-                        {/* FOOTER */}
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <button
-                                onClick={() => setIsViewOpen(false)}
-                                className="btn bg-red-600 text-white hover:bg-red-700 focus:outline-none rounded-md"
-                            >
-                                <i className="fa-solid fa-xmark"></i>
-                                Close
-                            </button>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Date</label>
 
-                            {/* SHOW ACKNOWLEDGE ONLY IF EMPTY */}
-                            {(!selectedChecklist.acknowledged_by ||
-                                selectedChecklist.acknowledged_by.trim() ===
-                                "") &&
-                                ["boxing"].includes(
-                                    emp_data.emp_system_role,
-                                ) && (
-                                    <button
-                                        onClick={() =>
-                                            handleAcknowledge(
-                                                selectedChecklist.id,
-                                            )
-                                        }
-                                        className="btn bg-green-600 hover:bg-green-700 text-white focus:outline-none rounded-md"
-                                    >
-                                        <i className="fa-solid fa-check"></i>
-                                        Acknowledge
-                                    </button>
-                                )}
-                            {!selectedChecklist.verified_by &&
-                                ["1268"].includes(emp_data.emp_id) && (
-                                    <>
-                                        <button
-                                            onClick={() =>
-                                                handleApproved(
-                                                    selectedChecklist.id,
-                                                )
-                                            }
-                                            className="btn bg-green-600 hover:bg-green-700 text-white focus:outline-none rounded-md"
-                                        >
-                                            <i className="fa-solid fa-check-double"></i>
-                                            Verified by
-                                        </button>
-                                    </>
-                                )}
+                            <Input
+                                readOnly
+                                className="bg-muted"
+                                value={
+                                    selectedChecklist?.date_performed
+                                        ? formatMMDDYYYY(
+                                              selectedChecklist.date_performed,
+                                          )
+                                        : ""
+                                }
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                                Acknowledged By
+                            </label>
+
+                            <Input
+                                readOnly
+                                className="bg-muted"
+                                value={
+                                    selectedChecklist?.acknowledged_by ||
+                                    "Pending Acknowledgement..."
+                                }
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                                Verified By
+                            </label>
+
+                            <Input
+                                readOnly
+                                className="bg-muted"
+                                value={
+                                    selectedChecklist?.verified_by ||
+                                    "Pending Verification..."
+                                }
+                            />
                         </div>
                     </div>
-                </div>
-            )}
+
+                    {/* TABLE */}
+                    <div className="border rounded-md overflow-hidden">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>STATION NAME</TableHead>
+                                    <TableHead className="text-center">
+                                        CHECK (Internal Parts)
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        REPLACE RIBBON / P2 LABEL
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        RESTART / CALIBRATE
+                                    </TableHead>
+                                    <TableHead>REMARKS</TableHead>
+                                </TableRow>
+                            </TableHeader>
+
+                            <TableBody>
+                                {selectedChecklist?.items?.map((row, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="font-medium">
+                                            {row.station_name}
+                                        </TableCell>
+
+                                        <TableCell className="text-center">
+                                            {row.check_internal && (
+                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell className="text-center">
+                                            {row.replace_ribbon && (
+                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell className="text-center">
+                                            {row.restart_calib && (
+                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell>
+                                            {row.remarks || "-"}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            variant="destructive"
+                            onClick={() => setIsViewOpen(false)}
+                        >
+                            <X className="h-4 w-4 mr-2" />
+                            Close
+                        </Button>
+
+                        {!selectedChecklist?.acknowledged_by?.trim() &&
+                            emp_data?.emp_system_role === "boxing" && (
+                                <Button
+                                    onClick={() =>
+                                        handleAcknowledge(selectedChecklist.id)
+                                    }
+                                >
+                                    <Check className="h-4 w-4 mr-2" />
+                                    Acknowledge
+                                </Button>
+                            )}
+
+                        {!selectedChecklist?.verified_by?.trim() &&
+                            emp_data?.emp_id === "1268" && (
+                                <Button
+                                    onClick={() =>
+                                        handleApproved(selectedChecklist.id)
+                                    }
+                                >
+                                    <CheckCheck className="h-4 w-4 mr-2" />
+                                    Verify
+                                </Button>
+                            )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* ========================= */}
-            {/*        EDIT MODAL         */}
+            {/*         EDIT CHECKLIST         */}
             {/* ========================= */}
-            {isEditOpen && selectedChecklist && (
-                <div className="fixed inset-0 z-50 flex justify-center items-start bg-black bg-opacity-50 overflow-y-auto p-4">
-                    <div className="bg-white w-full max-w-6xl rounded-lg shadow-lg p-6 mt-10 animate-fadeInScale">
-                        {/* HEADER */}
-                        <div className="flex justify-end items-center pb-3">
-                            <button
-                                onClick={() => setIsEditOpen(false)}
-                                className="text-red-600 text-xl hover:text-red-800 focus:outline-none"
-                            >
-                                <i className="fa-solid fa-xmark text-2xl"></i>
-                            </button>
-                        </div>
-                        <h1 className="text-2xl font-bold font-[Poppins] text-center text-red-800 uppercase">
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl font-bold text-red-800 uppercase">
                             BOXING PRINTER STARTUP CHECKLIST
-                        </h1>
+                        </DialogTitle>
+                    </DialogHeader>
 
-                        {/* FORM FIELDS */}
-                        <div className="mt-4">
-                            <div className="grid grid-cols-3 gap-4 mb-5">
-                                <div>
-                                    <label className="font-semibold">
-                                        Done By
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full"
-                                        value={selectedChecklist.performed_by}
-                                        onChange={(e) =>
-                                            setSelectedChecklist((prev) => ({
-                                                ...prev,
-                                                performed_by: e.target.value,
-                                            }))
-                                        }
-                                    />
-                                </div>
+                    {/* FORM FIELDS */}
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Done By
+                                </label>
 
-                                <div>
-                                    <label className="font-semibold">
-                                        Date
-                                    </label>
-                                    <input
-                                        type="date"
-                                        className="input input-bordered w-full"
-                                        value={selectedChecklist.date_performed}
-                                        onChange={(e) =>
-                                            setSelectedChecklist((prev) => ({
-                                                ...prev,
-                                                date_performed: e.target.value,
-                                            }))
-                                        }
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="font-semibold">
-                                        Acknowledged By
-                                    </label>
-                                    <input
-                                        className="input input-bordered w-full bg-gray-200 cursor-not-allowed"
-                                        readOnly
-                                    />
-                                </div>
+                                <Input
+                                    value={
+                                        selectedChecklist?.performed_by || ""
+                                    }
+                                    readOnly
+                                    className="bg-muted"
+                                />
                             </div>
 
-                            {/* TABLE */}
-                            <table className="table w-full border border-gray-300 mt-4 text-center">
-                                <thead className="bg-blue-50">
-                                    <tr>
-                                        <th className="border border-gray-300">
-                                            STATION NAME
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            CHECK (Internal parts)
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            REPLACE RIBBON / P2 LABEL
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            RESTART / CALIBRATE
-                                        </th>
-                                        <th className="border border-gray-300">
-                                            REMARKS
-                                        </th>
-                                    </tr>
-                                </thead>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Date
+                                </label>
 
-                                <tbody>
-                                    {selectedChecklist.items.map(
+                                <Input
+                                    type="date"
+                                    value={
+                                        selectedChecklist?.date_performed || ""
+                                    }
+                                    onChange={(e) =>
+                                        setSelectedChecklist((prev) => ({
+                                            ...prev,
+                                            date_performed: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Acknowledged By
+                                </label>
+
+                                <Input readOnly className="bg-muted" />
+                            </div>
+                        </div>
+
+                        {/* TABLE */}
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="text-center">
+                                            STATION NAME
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            CHECK (Internal Parts)
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            REPLACE RIBBON / P2 LABEL
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            RESTART / CALIBRATE
+                                        </TableHead>
+                                        <TableHead className="text-center">
+                                            REMARKS
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+
+                                <TableBody>
+                                    {selectedChecklist?.items.map(
                                         (row, index) => (
-                                            <tr key={index}>
-                                                <td className="border border-gray-300 font-semibold">
+                                            <TableRow key={index}>
+                                                <TableCell className="font-medium">
                                                     {row.station_name}
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="checkbox"
+                                                </TableCell>
+
+                                                <TableCell className="text-center">
+                                                    <Checkbox
                                                         checked={
                                                             row.check_internal
                                                         }
-                                                        onChange={(e) => {
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => {
                                                             const items = [
                                                                 ...selectedChecklist.items,
                                                             ];
+
                                                             items[
                                                                 index
                                                             ].check_internal =
-                                                                e.target.checked;
+                                                                !!checked;
+
                                                             setSelectedChecklist(
                                                                 (prev) => ({
                                                                     ...prev,
@@ -889,22 +848,25 @@ export default function BoxingPrinterChecklist({
                                                             );
                                                         }}
                                                     />
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="checkbox"
+                                                </TableCell>
+
+                                                <TableCell className="text-center">
+                                                    <Checkbox
                                                         checked={
                                                             row.replace_ribbon
                                                         }
-                                                        onChange={(e) => {
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => {
                                                             const items = [
                                                                 ...selectedChecklist.items,
                                                             ];
+
                                                             items[
                                                                 index
                                                             ].replace_ribbon =
-                                                                e.target.checked;
+                                                                !!checked;
+
                                                             setSelectedChecklist(
                                                                 (prev) => ({
                                                                     ...prev,
@@ -913,22 +875,25 @@ export default function BoxingPrinterChecklist({
                                                             );
                                                         }}
                                                     />
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="checkbox"
+                                                </TableCell>
+
+                                                <TableCell className="text-center">
+                                                    <Checkbox
                                                         checked={
                                                             row.restart_calib
                                                         }
-                                                        onChange={(e) => {
+                                                        onCheckedChange={(
+                                                            checked,
+                                                        ) => {
                                                             const items = [
                                                                 ...selectedChecklist.items,
                                                             ];
+
                                                             items[
                                                                 index
                                                             ].restart_calib =
-                                                                e.target.checked;
+                                                                !!checked;
+
                                                             setSelectedChecklist(
                                                                 (prev) => ({
                                                                     ...prev,
@@ -937,20 +902,21 @@ export default function BoxingPrinterChecklist({
                                                             );
                                                         }}
                                                     />
-                                                </td>
-                                                <td className="border border-gray-300">
-                                                    <input
-                                                        type="text"
-                                                        className="input input-bordered w-full"
+                                                </TableCell>
+
+                                                <TableCell>
+                                                    <Input
                                                         value={row.remarks}
                                                         onChange={(e) => {
                                                             const items = [
                                                                 ...selectedChecklist.items,
                                                             ];
+
                                                             items[
                                                                 index
                                                             ].remarks =
                                                                 e.target.value;
+
                                                             setSelectedChecklist(
                                                                 (prev) => ({
                                                                     ...prev,
@@ -959,27 +925,27 @@ export default function BoxingPrinterChecklist({
                                                             );
                                                         }}
                                                     />
-                                                </td>
-                                            </tr>
+                                                </TableCell>
+                                            </TableRow>
                                         ),
                                     )}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
 
                         {/* FOOTER */}
-                        <div className="mt-6 flex justify-end space-x-3">
-                            <button
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                className="flex items-center bg-red-500 hover:bg-red-600"
                                 onClick={() => setIsEditOpen(false)}
-                                className="btn bg-red-600 text-white hover:bg-red-700 focus:outline-none rounded-md"
                             >
-                                <i className="fa-solid fa-xmark"></i>
+                                <X className="h-4 w-4 mr-2" />
                                 Cancel
-                            </button>
-                            <button
-                                className="btn bg-green-600 hover:bg-green-700 text-white"
+                            </Button>
+
+                            <Button
+                                className="flex items-center bg-green-500 hover:bg-green-600"
                                 onClick={() => {
-                                    // Call save API for updated checklist
                                     router.put(
                                         route(
                                             "boxing-printer-checklist.update",
@@ -995,13 +961,13 @@ export default function BoxingPrinterChecklist({
                                     );
                                 }}
                             >
-                                <i className="fa-solid fa-floppy-disk"></i>
+                                <Save className="h-4 w-4 mr-2" />
                                 Save Changes
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                </div>
-            )}
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

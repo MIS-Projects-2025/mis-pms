@@ -32,9 +32,14 @@ class LadderChecklistController extends Controller
             'checklist',
             'ladder_checklist',
             [
-                'conditions' => function ($query) {
-                    return $query
-                        ->OrderBy('id', 'desc');
+                'conditions' => function ($query) use ($request) {
+                    $query->orderBy('id', 'DESC');
+
+                    if ($request->filled('status')) {
+                      $query->where('status', $request->status);
+                    }
+
+                return $query;
                 },
 
                 'searchColumns' => ['done_check', 'next_check'],
@@ -58,6 +63,7 @@ class LadderChecklistController extends Controller
                 'end',
                 'dropdownSearchValue',
                 'dropdownFields',
+                'status',
             ]),
         ]);
     }
@@ -86,6 +92,7 @@ class LadderChecklistController extends Controller
             'next_check' => null,
             'second_inspected_by' => null,
             'second_verified_by' => null,
+            'status' => 2
         ]);
 
         return redirect()->back()->with('success', 'Checklist saved successfully.');
@@ -113,12 +120,15 @@ class LadderChecklistController extends Controller
             ? 'first_verified_date'
             : 'second_verified_date';
 
+        $status = $request->stage === 'first' ? 1 : 2;
+
         DB::connection('checklist')
             ->table('ladder_checklist')
             ->where('id', $id)
             ->update([
                 $column => $verifiedBy,
                 $dateColumn => $verifiedDate,
+                'status' => $status
             ]);
 
         return back()->with('success', 'Checklist verified successfully.');
@@ -132,7 +142,8 @@ class LadderChecklistController extends Controller
             ->update([
                 'next_check' => $request->next_check,
                 'second_inspected_by' => $request->second_inspected_by,
-                'sections' => json_encode($request->sections)
+                'sections' => json_encode($request->sections),
+                'status' => 2,
             ]);
 
         return back()->with('success', 'Next check updated successfully.');

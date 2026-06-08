@@ -13,12 +13,13 @@ import {
     WavesLadder,
     ListCheck,
     Mailbox,
+    Download,
 } from "lucide-react";
 
 export default function NavLinks({ isSidebarOpen }) {
     const { emp_data } = usePage().props;
 
-    console.log("Session emp_data in Navigation.jsx:", emp_data);
+    // console.log("Session emp_data in Navigation.jsx:", emp_data);
 
     return (
         <nav
@@ -117,6 +118,16 @@ export default function NavLinks({ isSidebarOpen }) {
                             },
                         ]}
                     />
+{["superadmin"].includes(emp_data?.emp_system_role) && (
+                    <div>
+                        <SidebarLink
+                            href={route("export.index")}
+                            label="Export Data"
+                            icon={<Download className="w-5 h-5" />}
+                            isSidebarOpen={isSidebarOpen}
+                        />
+                    </div>
+)}
                 </div>
             )}
 

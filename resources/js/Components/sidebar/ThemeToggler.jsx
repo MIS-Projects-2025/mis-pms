@@ -18,7 +18,7 @@ export default function ThemeToggler({ toggleTheme, theme }) {
                     "absolute top-1 w-6 h-6 rounded-full shadow-md transition-all duration-300",
                     isDark
                         ? "left-1 bg-primary shadow-primary/30"
-                        : "left-[calc(100%-1.75rem)] bg-amber-400 shadow-amber-400/30",
+                        : "left-[calc(100%-1.75rem)] bg-black shadow-white/30",
                 )}
             />
 
@@ -26,7 +26,7 @@ export default function ThemeToggler({ toggleTheme, theme }) {
             <span
                 className={cn(
                     "relative z-10 flex items-center justify-center w-6 h-6",
-                    isDark ? "text-muted-foreground" : "text-white",
+                    isDark ? "text-black" : "text-black",
                 )}
             >
                 <Sun className="w-3.5 h-3.5" />
@@ -36,7 +36,7 @@ export default function ThemeToggler({ toggleTheme, theme }) {
             <span
                 className={cn(
                     "relative z-10 flex items-center justify-center w-6 h-6",
-                    isDark ? "text-white" : "text-muted-foreground",
+                    isDark ? "text-white" : "text-white",
                 )}
             >
                 <Moon className="w-3.5 h-3.5" />
