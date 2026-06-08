@@ -157,6 +157,7 @@ class BoxingPrinterChecklistController extends Controller
         DB::connection('checklist')->table('boxing_printer_checklists')
             ->where('id', $id)
             ->update([
+                'shift' => $request->shift,
                 'date_performed' => $request->date_performed,
                 'items' => $request->has('items') ? json_encode($request->items) : null,
             ]);

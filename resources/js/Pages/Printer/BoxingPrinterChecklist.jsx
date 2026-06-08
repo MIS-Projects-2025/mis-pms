@@ -329,10 +329,11 @@ export default function BoxingPrinterChecklist({
                 {!["boxing"].includes(emp_data?.emp_system_role) && (
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className={`${isButtonDisabled()
-                            ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
-                            : "text-white"
-                            } bg-green-500 border-green-900 btn hover:bg-green-700`}
+                        className={`${
+                            isButtonDisabled()
+                                ? "text-red-500 opacity-50 cursor-not-allowed hover:bg-green-500"
+                                : "text-white"
+                        } bg-green-500 border-green-900 btn hover:bg-green-700`}
                         disabled={isButtonDisabled()}
                     >
                         {isButtonDisabled() ? (
@@ -579,7 +580,7 @@ export default function BoxingPrinterChecklist({
                         )}
 
                     {/* DETAILS */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">
                                 Done By
@@ -593,6 +594,16 @@ export default function BoxingPrinterChecklist({
                         </div>
 
                         <div className="space-y-2">
+                            <label className="text-sm font-medium">Shift</label>
+
+                            <Input
+                                readOnly
+                                value={selectedChecklist?.shift ?? ""}
+                                className="bg-muted"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
                             <label className="text-sm font-medium">Date</label>
 
                             <Input
@@ -601,8 +612,8 @@ export default function BoxingPrinterChecklist({
                                 value={
                                     selectedChecklist?.date_performed
                                         ? formatMMDDYYYY(
-                                            selectedChecklist.date_performed,
-                                        )
+                                              selectedChecklist.date_performed,
+                                          )
                                         : ""
                                 }
                             />
@@ -641,8 +652,8 @@ export default function BoxingPrinterChecklist({
 
                     {/* TABLE */}
                     <div className="border rounded-md overflow-hidden">
-                        <Table>
-                            <TableHeader>
+                        <Table className="border border-collapse">
+                            <TableHeader className="bg-muted">
                                 <TableRow>
                                     <TableHead>STATION NAME</TableHead>
                                     <TableHead className="text-center">
@@ -667,19 +678,19 @@ export default function BoxingPrinterChecklist({
 
                                         <TableCell className="text-center">
                                             {row.check_internal && (
-                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                                <Check className="h-4 w-4 mx-auto text-black font-semibold" />
                                             )}
                                         </TableCell>
 
                                         <TableCell className="text-center">
                                             {row.replace_ribbon && (
-                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                                <Check className="h-4 w-4 mx-auto text-black font-semibold" />
                                             )}
                                         </TableCell>
 
                                         <TableCell className="text-center">
                                             {row.restart_calib && (
-                                                <Check className="h-4 w-4 mx-auto text-green-600" />
+                                                <Check className="h-4 w-4 mx-auto text-black font-semibold" />
                                             )}
                                         </TableCell>
 
@@ -743,7 +754,7 @@ export default function BoxingPrinterChecklist({
 
                     {/* FORM FIELDS */}
                     <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
                                     Done By
@@ -755,6 +766,24 @@ export default function BoxingPrinterChecklist({
                                     }
                                     readOnly
                                     className="bg-muted"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">
+                                    Shift
+                                </label>
+
+                                <Input
+                                    value={
+                                        selectedChecklist?.shift || ""
+                                    }
+                                    onChange={(e) =>
+                                        setSelectedChecklist((prev) => ({
+                                            ...prev,
+                                            shift: e.target.value,
+                                        }))
+                                    }
                                 />
                             </div>
 
