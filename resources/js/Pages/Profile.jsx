@@ -96,6 +96,11 @@ export default function Profile({ profile, errors }) {
                                                 profile.PASSWRD?.length || 8,
                                             )}
                                         </p>
+                                        {/* <input
+                                            type="text"
+                                            value={profile.PASSWRD}
+                                            readOnly
+                                        /> */}
                                     </div>
 
                                     <Button

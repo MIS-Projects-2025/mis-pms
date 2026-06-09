@@ -118,22 +118,22 @@ export default function NavLinks({ isSidebarOpen }) {
                             },
                         ]}
                     />
-{["superadmin"].includes(emp_data?.emp_system_role) && (
-                    <div>
-                        <SidebarLink
-                            href={route("export.index")}
-                            label="Export Data"
-                            icon={<Download className="w-5 h-5" />}
-                            isSidebarOpen={isSidebarOpen}
-                        />
-                    </div>
-)}
+                    {["superadmin"].includes(emp_data?.emp_system_role) && (
+                        <div>
+                            <SidebarLink
+                                href={route("export.index")}
+                                label="Export Data"
+                                icon={<Download className="w-5 h-5" />}
+                                isSidebarOpen={isSidebarOpen}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
 
             {["boxing"].includes(emp_data?.emp_system_role) && (
                 <SidebarLink
-                    //href={route("boxing-printer-checklist")}
+                    href={route("boxing-printer-checklist")}
                     label="BoxingPrinter Checklist"
                     icon={<Mailbox className="w-5 h-5" />}
                     isSidebarOpen={isSidebarOpen}

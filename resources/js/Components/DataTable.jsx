@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { router } from "@inertiajs/react";
-
+import { router, usePage } from "@inertiajs/react";
 import { Button } from "@/Components/ui/button";
 import { Input } from "@/Components/ui/input";
 import { Checkbox } from "@/Components/ui/checkbox";
@@ -43,6 +42,14 @@ export default function DataTable({
     tabs = [],
     tabKey = "tab",
 }) {
+    const { emp_data } = usePage().props;
+
+    const canAccess = ["admin", "superadmin"].includes(
+        emp_data.emp_role || emp_data.emp_system_role,
+    );
+
+    console.log("Session emp_data in DataTable.jsx:", canAccess);
+
     const [selected, setSelected] = useState([]);
     const [activeRow, setActiveRow] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
@@ -56,15 +63,15 @@ export default function DataTable({
     const [dateTo, setDateTo] = useState(extractDate(filters.end));
     const [localTab, setLocalTab] = useState(filters?.[tabKey] || "");
 
- const handleTabChange = (value) => {
-     setLocalTab(value);
+    const handleTabChange = (value) => {
+        setLocalTab(value);
 
-     router.get(routeName, {
-         ...filters,
-         [tabKey]: value,
-         page: 1,
-     });
- };
+        router.get(routeName, {
+            ...filters,
+            [tabKey]: value,
+            page: 1,
+        });
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -228,7 +235,7 @@ export default function DataTable({
 
     return (
         <div className="w-full rounded-lg border bg-background p-4">
-            {tabs.length > 0 && (
+            {canAccess && tabs.length > 0 && (
                 <Tabs value={localTab} onValueChange={handleTabChange}>
                     <TabsList>
                         {tabs.map((tab) => (
