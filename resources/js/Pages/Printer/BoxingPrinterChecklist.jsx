@@ -150,27 +150,20 @@ export default function BoxingPrinterChecklist({
     const assignedColors = {}; // Shift → color mapping
 
     function getShiftColor(shift) {
-        if (!shift)
-            return { text: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB" }; // default gray
+        const fallback = {
+            text: "#6B7280",
+            bg: "#F3F4F6",
+            border: "#D1D5DB",
+        };
 
-        // If this shift already has a color, return it
+        if (!shift) return fallback;
+
         if (assignedColors[shift]) return assignedColors[shift];
 
-        // Find colors not yet assigned
-        const usedColors = Object.values(assignedColors).map((c) =>
-            Colors.indexOf(c),
-        );
-        const availableColors = Colors.filter(
-            (_, idx) => !usedColors.includes(idx),
-        );
+        const index = Object.keys(assignedColors).length % Colors.length;
 
-        // Pick the first available color
-        const color =
-            availableColors.length > 0
-                ? availableColors[0]
-                : Colors[assignedColors.length % Colors.length];
+        const color = Colors[index] || fallback;
 
-        // Save for future
         assignedColors[shift] = color;
 
         return color;
@@ -754,7 +747,7 @@ export default function BoxingPrinterChecklist({
 
                     {/* FORM FIELDS */}
                     <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
                                     Done By
@@ -766,24 +759,6 @@ export default function BoxingPrinterChecklist({
                                     }
                                     readOnly
                                     className="bg-muted"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Shift
-                                </label>
-
-                                <Input
-                                    value={
-                                        selectedChecklist?.shift || ""
-                                    }
-                                    onChange={(e) =>
-                                        setSelectedChecklist((prev) => ({
-                                            ...prev,
-                                            shift: e.target.value,
-                                        }))
-                                    }
                                 />
                             </div>
 

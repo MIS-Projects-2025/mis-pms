@@ -175,10 +175,11 @@ export default function Sidebar() {
                                         {formattedAppName}
                                     </span>
                                     <span
-                                        className="text-[6px] font-medium tracking-widest uppercase
+                                        className="text-[6px] font-medium font-bold tracking-widest uppercase
                                         text-primary/70"
                                     >
-                                        MIS Preventive Maintenance Checklist System
+                                        MIS Preventive Maintenance Checklist
+                                        System
                                     </span>
                                 </div>
                             )}
