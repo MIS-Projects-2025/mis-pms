@@ -370,9 +370,18 @@ export default function DataTable({
                             placeholder="Search..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSearch(e);
+                                }
+                            }}
                         />
 
-                        <Button size="icon" type="submit">
+                        <Button
+                            size="icon"
+                            type="button"
+                            onClick={handleSearch}
+                        >
                             <Search className="h-4 w-4" />
                         </Button>
 
