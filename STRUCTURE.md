@@ -312,6 +312,96 @@ CREATE TABLE `ladder_checklist` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
+┌─────────────────────┐
+│        admin        │
+├─────────────────────┤
+│ admin_id (PK)       │
+│ emp_id              │
+│ emp_name            │
+│ emp_role            │
+│ emp_jobtitle        │
+│ created_date        │
+└──────────┬──────────┘
+           │
+           │ Used as
+           │ Performed By /
+           │ Verified By /
+           │ Acknowledged By
+           │
+           ▼
+
+┌─────────────────────┐
+│ computer_checklists │
+├─────────────────────┤
+│ id (PK)             │
+│ computer_name       │
+│ date_checked        │
+│ date_due            │
+│ performed_by        │
+│ verified_by         │
+│ status              │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│ printer_checklists  │
+├─────────────────────┤
+│ id (PK)             │
+│ printer_name        │
+│ serial_num          │
+│ location            │
+│ performed_by        │
+│ verified_by         │
+│ status              │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│boxing_printer_check │
+├─────────────────────┤
+│ id (PK)             │
+│ performed_by        │
+│ acknowledged_by     │
+│ verified_by         │
+│ status              │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│   ladder_checklist  │
+├─────────────────────┤
+│ id (PK)             │
+│ inspected_by        │
+│ verified_by         │
+│ first_inspected_by  │
+│ first_verified_by   │
+│ second_inspected_by │
+│ second_verified_by  │
+│ status              │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│ computer_repair_tbl │
+├─────────────────────┤
+│ id (PK)             │
+│ tech_id             │
+│ tech_name           │
+│ report_no           │
+│ status              │
+└─────────────────────┘
+
+
+┌─────────────────────┐
+│     cctv_lists      │
+├─────────────────────┤
+│ id (PK)             │
+│ camera_name         │
+│ location            │
+│ created_by          │
+│ updated_by          │
+└─────────────────────┘
+
 
 ### Functional Requirements
 FR-001
