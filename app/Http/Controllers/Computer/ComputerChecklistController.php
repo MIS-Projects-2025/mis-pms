@@ -39,17 +39,27 @@ class ComputerChecklistController extends Controller
             'computer_checklists',
             [
                 'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
+    $query->orderBy('id', 'DESC');
 
-                    if ($request->filled('status')) {
-                      $query->where('status', $request->status);
-                    }
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
 
-                return $query;
-                },
+    if ($request->filled('start') && $request->filled('end')) {
+        $query->whereBetween('date_created', [
+            $request->start,
+            $request->end
+        ]);
+    }
+
+            return $query;
+            },
 
                 'searchColumns' => ['computer_name', 'date_checked', 'performed_by', 'recommendations'],
                 'status',
+
+                'filename' => 'computer_checklist_export_' . now()->format('Ymd_His'), // Filename for export
+                'exportColumns' => ['computer_name', 'date_checked', 'date_due', 'performed_by', 'items', 'recommendations', 'verified_by', 'verified_date'],
             ]
 
 
@@ -65,16 +75,17 @@ class ComputerChecklistController extends Controller
             'computerChecklists' => $computerChecklists,
             'computerName' => $computerName,
             'tableFilters' => $request->only([
-                'search',
-                'perPage',
-                'sortBy',
-                'sortDirection',
-                'start',
-                'end',
-                'dropdownSearchValue',
-                'dropdownFields',
-                'status',
-            ]),
+    'search',
+    'perPage',
+    'sortBy',
+    'sortDirection',
+    'start',
+    'end',
+    'dateField',
+    'dropdownSearchValue',
+    'dropdownFields',
+    'status',
+]),
         ]);
     }
 

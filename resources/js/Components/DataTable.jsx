@@ -62,6 +62,7 @@ export default function DataTable({
     const [dateFrom, setDateFrom] = useState(extractDate(filters.start));
     const [dateTo, setDateTo] = useState(extractDate(filters.end));
     const [localTab, setLocalTab] = useState(filters?.[tabKey] || "");
+    const hasDateFilter = Boolean(dateFrom && dateTo);
 
     const handleTabChange = (value) => {
         setLocalTab(value);
@@ -108,21 +109,18 @@ export default function DataTable({
     };
 
     const handleExport = () => {
+        if (!hasDateFilter) return;
+
         const query = {
             ...filters,
-            search: searchInput,
             perPage,
-            start: dateFrom ? `${dateFrom} 00:00:00` : undefined,
-            end: dateTo ? `${dateTo} 23:59:59` : undefined,
+            start: `${dateFrom} 00:00:00`,
+            end: `${dateTo} 23:59:59`,
             export: 1,
         };
 
-        if (filterDropdown) {
-            query[filterDropdown.key] = dropdownValue;
-            query.dropdownFields = filterDropdown.fields.join(",");
-        }
-
         const queryString = new URLSearchParams(query).toString();
+
         window.open(`${routeName}?${queryString}`, "_blank");
     };
 
@@ -288,32 +286,44 @@ export default function DataTable({
                     </SelectContent>
                 </Select>
 
-                {dateRangeSearch ? (
-                    <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:w-auto">
-                        <Input
-                            type="date"
-                            value={dateFrom}
-                            onChange={(e) => setDateFrom(e.target.value)}
-                        />
-                        <span className="mx-1">to</span>
-                        <Input
-                            type="date"
-                            value={dateTo}
-                            onChange={(e) => setDateTo(e.target.value)}
-                        />
-                        <Button type="submit">Filter</Button>
-                        {showExport && (
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleExport}
-                            >
-                                Export CSV
-                            </Button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:w-auto">
+                <div className="flex w-full items-center justify-between gap-4">
+                    {/* LEFT (optional space / future use) */}
+                    <div className="flex-1" />
+
+                    {/* MIDDLE: DATE FILTER (CENTERED) */}
+                    {canAccess && dateRangeSearch && (
+                        <div className="flex items-center gap-2 justify-center flex-1">
+                            <Input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                            />
+
+                            <span className="mx-1">to</span>
+
+                            <Input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                            />
+
+                            <Button type="submit">Filter</Button>
+
+                            {showExport && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleExport}
+                                    disabled={!hasDateFilter}
+                                >
+                                    Export
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* RIGHT: SEARCH FIELD */}
+                    <div className="flex items-center gap-2 justify-end flex-1">
                         {filterDropdown && (
                             <Select
                                 value={dropdownValue || "all"}
@@ -332,13 +342,11 @@ export default function DataTable({
                                             dropdownFields:
                                                 filterDropdown.fields.join(","),
                                         },
-                                        {
-                                            preserveState: true,
-                                        },
+                                        { preserveState: true },
                                     );
                                 }}
                             >
-                                <SelectTrigger className="w-[170px]">
+                                <SelectTrigger className="w-[150px]">
                                     <SelectValue placeholder="All" />
                                 </SelectTrigger>
 
@@ -356,25 +364,29 @@ export default function DataTable({
                                 </SelectContent>
                             </Select>
                         )}
+
                         <Input
+                            className="w-[220px]"
                             placeholder="Search..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                         />
+
                         <Button size="icon" type="submit">
                             <Search className="h-4 w-4" />
                         </Button>
+
                         {showExport && (
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={handleExport}
                             >
-                                Export CSV
+                                Export
                             </Button>
                         )}
                     </div>
-                )}
+                </div>
             </form>
 
             <div className="w-full mt-4 overflow-x-auto">

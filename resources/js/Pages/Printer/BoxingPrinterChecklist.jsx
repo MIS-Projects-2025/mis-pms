@@ -365,7 +365,8 @@ export default function BoxingPrinterChecklist({
                 }}
                 routeName={route("boxing-printer-checklist")}
                 filters={tableFilters}
-                rowKey="performed_by"
+                rowKey="id"
+                dateRangeSearch={true}
                 showExport={false}
                 tabKey="status"
                 tabs={[

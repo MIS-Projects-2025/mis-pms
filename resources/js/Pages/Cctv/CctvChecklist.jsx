@@ -317,6 +317,7 @@ export default function CctvChecklist({
                 routeName={route("cctv.index")}
                 filters={tableFilters}
                 rowKey="id"
+                dateRangeSearch={true}
                 showExport={false}
                 tabKey="status"
                 tabs={[

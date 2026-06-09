@@ -374,7 +374,8 @@ export default function PrinterChecklist({
                 }}
                 routeName={route("printer-checklist")}
                 filters={tableFilters}
-                rowKey="printer_name"
+                rowKey="id"
+                dateRangeSearch={true}
                 showExport={false}
                 tabKey="status"
                 tabs={[

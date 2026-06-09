@@ -235,6 +235,7 @@ export default function LadderChecklist({
                 routeName={route("ladder_checklist.index")}
                 filters={tableFilters}
                 rowKey="id"
+                dateRangeSearch={true}
                 showExport={false}
                 tabKey="status"
                 tabs={[

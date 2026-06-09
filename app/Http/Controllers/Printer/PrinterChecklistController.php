@@ -86,6 +86,13 @@ class PrinterChecklistController extends Controller
                       $query->where('status', $request->status);
                     }
 
+                    if ($request->filled('start') && $request->filled('end')) {
+                        $query->whereBetween('date_created', [
+                         $request->start,
+                        $request->end
+                        ]);
+                    }
+
                 return $query;
                 },
 

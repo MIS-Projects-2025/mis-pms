@@ -226,6 +226,7 @@ export default function ComputerRepair({
                 routeName={route("computer_repairs.index")}
                 filters={tableFilters}
                 rowKey="id"
+                dateRangeSearch={true}
                 showExport={false}
                 tabKey="status"
                 tabs={[
