@@ -3,6 +3,7 @@ import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState, useEffect } from "react";
 import { Select } from "antd";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 export default function CctvChecklist({
     tableData,
@@ -227,20 +228,19 @@ export default function CctvChecklist({
                 <div className="flex gap-2">
                     {/* VIEW */}
                     <button
-                        className="px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1"
+                        className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1"
                         onClick={() => {
                             setSelectedReport(r);
                             setViewModal(true);
                         }}
                     >
-                        <i className="fas fa-eye"></i>
-                        <span className="hidden md:inline">View</span>
+                        <Eye className="h-4 w-4" />
                     </button>
 
                     {/* EDIT (optional) */}
                     {!r.verified_by && (
                         <button
-                            className="px-2 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center gap-1"
+                            className="px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center gap-1"
                             onClick={() => {
                                 setSelectedReport(r);
 
@@ -264,8 +264,7 @@ export default function CctvChecklist({
                                 setEditModal(true);
                             }}
                         >
-                            <i className="fas fa-edit"></i>
-                            <span className="hidden md:inline">Edit</span>
+                            <Pencil className="h-4 w-4" />
                         </button>
                     )}
                 </div>
@@ -278,7 +277,7 @@ export default function CctvChecklist({
             <Head title="cctv" />
 
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-pulse">
+                <h1 className="text-2xl font-bold">
                     <i className="fa-solid fa-video"></i> CCTV Checklist
                 </h1>
 

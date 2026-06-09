@@ -96,7 +96,7 @@ class PrinterChecklistController extends Controller
                 return $query;
                 },
 
-                'searchColumns' => ['pm_date', 'performed_by', 'printer_name', 'serial_num', 'location', 'next_pm'],
+                'searchColumns' => ['printer_name', 'pm_date', 'performed_by', 'printer_name', 'serial_num', 'location', 'next_pm', 'verified_by'],
             ]
         );
 

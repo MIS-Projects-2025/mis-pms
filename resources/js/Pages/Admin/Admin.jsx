@@ -1,24 +1,44 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
-import Modal from "@/Components/Modal";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/Components/ui/dialog";
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+
+import { Button } from "@/Components/ui/button";
+
+import {
+    List,
+    UserPlus,
+    User,
+    IdCard,
+    Briefcase,
+    Shield,
+    Trash2,
+    RefreshCw,
+} from "lucide-react";
 
 import { useState } from "react";
 
 export default function Admin({ tableData, tableFilters, emp_data }) {
     const [role, setRole] = useState(null);
+    const [open, setOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     function removeAdmin(id) {
-        router.post(
-            route("removeAdmin"),
-            { id },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    console.log("Admin removed");
-                },
-            }
-        );
+        router.post(route("removeAdmin"), { id }, { preserveScroll: true });
     }
 
     function changeRole(id) {
@@ -30,46 +50,66 @@ export default function Admin({ tableData, tableFilters, emp_data }) {
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    console.log("Admin role changed");
+                    setOpen(false);
+                    setSelectedUser(null);
+                    setRole(null);
                 },
-            }
+            },
         );
     }
 
-    const tableModalClose = (close) => {
-        setRole(null);
-        close();
+    const openModal = (row) => {
+        setSelectedUser(row);
+        setRole(row.emp_role);
+        setOpen(true);
     };
 
     return (
         <AuthenticatedLayout>
             <Head title="Manage User List" />
 
+            {/* HEADER */}
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
-                    <i className="fa-solid fa-list mr-2"></i> User List
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <List className="h-5 w-5" />
+                    User List
                 </h1>
 
-                {["superadmin", "admin", "toolcrib"].includes(emp_data?.emp_system_role) && (
-                    <button
-                         className="text-white bg-green-500 border-green-900 btn hover:bg-green-700"
-                        onClick={() =>
-                            router.get(route("index_addAdmin"), {}, { preserveScroll: true })
-                        }
+                {["superadmin", "admin", "toolcrib"].includes(
+                    emp_data?.emp_system_role,
+                ) && (
+                    <Button
+                        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                        onClick={() => router.get(route("index_addAdmin"))}
                     >
-                        <i className="fa-solid fa-user-plus"></i> New User
-                    </button>
+                        <UserPlus className="h-4 w-4" />
+                        New User
+                    </Button>
                 )}
             </div>
 
+            {/* TABLE */}
             <DataTable
                 columns={[
                     { key: "emp_id", label: "ID" },
                     { key: "emp_name", label: "Employee Name" },
                     { key: "emp_jobtitle", label: "Job Title" },
                     { key: "emp_role", label: "Role" },
+                    { key: "actions", label: "Action" },
                 ]}
-                data={tableData.data}
+                data={tableData.data.map((row) => ({
+                    ...row,
+                    actions: (
+                        <Button
+                            size="sm"
+                            className="flex items-center gap-2"
+                            onClick={() => openModal(row)}
+                        >
+                            <User className="h-4 w-4" />
+                            View
+                        </Button>
+                    ),
+                }))}
                 meta={{
                     from: tableData.from,
                     to: tableData.to,
@@ -81,84 +121,124 @@ export default function Admin({ tableData, tableFilters, emp_data }) {
                 routeName={route("admin")}
                 filters={tableFilters}
                 rowKey="emp_id"
-                showExport={false}
-            >
-                {(row, close) => (
-                    <Modal
-                        id="RowModal"
-                        icon="<i className='fa-solid fa-users-gear mr-2 text-blue-600'></i>"
-                        title="Employee Details"
-                        show={true}
-                        onClose={() => tableModalClose(close)}
-                        className="max-w-md w-full rounded-2xl shadow-xl bg-white dark:text-gray-200 dark:bg-gray-800 p-6 border border-gray-200 dark:border-gray-700"
-                    >
+            />
+
+            {/* MODAL (SHADCN DIALOG) */}
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-blue-600" />
+                            Employee Details
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {selectedUser && (
                         <div className="space-y-4">
-                            {/* User Info */}
-                            <div className="text-center">
-                                <div className="text-4xl text-blue-600 mb-2">
-                                    <i className="fa-solid fa-user-circle"></i>
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                                    {row.emp_name}
+                            {/* USER INFO */}
+                            <div className="text-center space-y-1">
+                                <User className="h-10 w-10 mx-auto text-blue-600" />
+
+                                <h2 className="text-xl font-bold">
+                                    {selectedUser.emp_name}
                                 </h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    ID: <span className="font-semibold">{row.emp_id}</span>
+
+                                <p className="text-sm flex items-center justify-center gap-1">
+                                    <IdCard className="h-4 w-4" />
+                                    {selectedUser.emp_id}
                                 </p>
-                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                    Current Role:{" "}
-                                    <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                        {row.emp_role}
-                                    </span>
+
+                                <p className="text-sm flex items-center justify-center gap-1">
+                                    <Briefcase className="h-4 w-4" />
+                                    {selectedUser.emp_jobtitle}
                                 </p>
-                                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                                    Job Title:{" "}
-                                    <span className="font-semibold text-gray-700 dark:text-gray-300">
-                                        {row.emp_jobtitle}
+
+                                <p className="text-sm">
+                                    Role:{" "}
+                                    <span className="font-semibold text-blue-600">
+                                        {selectedUser.emp_role}
                                     </span>
                                 </p>
                             </div>
 
-                            {/* Admin Controls */}
-                            {["superadmin", "admin"].includes(emp_data?.emp_system_role) &&
-                                !row.emp_role.includes("superadmin") && (
-                                    <div className="mt-6 space-y-4">
-                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {/* ROLE EDIT */}
+                            {["superadmin", "admin"].includes(
+                                emp_data?.emp_system_role,
+                            ) &&
+                                !selectedUser.emp_role.includes(
+                                    "superadmin",
+                                ) && (
+                                    <div className="space-y-3">
+                                        <label className="text-sm font-semibold">
                                             Update Role
                                         </label>
-                                        <select
-                                            defaultValue={row.emp_role}
-                                            onChange={(e) => setRole(e.target.value)}
-                                            className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-2"
-                                        >
-                                            {emp_data?.emp_system_role === "superadmin" && (
-                                                <option value="superadmin">Superadmin</option>
-                                            )}
-                                                <option value="admin">Admin</option>
-                                                <option value="supporttech">Support Technician</option>
-                                                <option value="networktech">Network Technician</option>
-                                                <option value="boxing">User Boxing</option>
-                                        </select>
 
-                                        <div className="flex justify-end gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                            <button
-                                                onClick={() => changeRole(row.emp_id)}
-                                                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium transition-all duration-200"
+                                        <Select
+                                            value={role}
+                                            onValueChange={(value) =>
+                                                setRole(value)
+                                            }
+                                        >
+                                            <SelectTrigger className="w-full">
+                                                <SelectValue placeholder="Select Role" />
+                                            </SelectTrigger>
+
+                                            <SelectContent>
+                                                {emp_data?.emp_system_role ===
+                                                    "superadmin" && (
+                                                    <SelectItem value="superadmin">
+                                                        Superadmin
+                                                    </SelectItem>
+                                                )}
+
+                                                <SelectItem value="admin">
+                                                    Admin
+                                                </SelectItem>
+                                                <SelectItem value="supporttech">
+                                                    Support Technician
+                                                </SelectItem>
+                                                <SelectItem value="networktech">
+                                                    Network Technician
+                                                </SelectItem>
+                                                <SelectItem value="boxing">
+                                                    User Boxing
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {/* ACTIONS */}
+                                        <div className="flex justify-end gap-3 pt-3 border-t">
+                                            <Button
+                                                className="flex items-center gap-2"
+                                                onClick={() =>
+                                                    changeRole(
+                                                        selectedUser.emp_id,
+                                                    )
+                                                }
                                             >
-                                                <i className="fa-solid fa-rotate me-2"></i> Update Role
-                                            </button>
-                                            <button
-                                                onClick={() => removeAdmin(row.emp_id)}
-                                                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 text-sm font-medium transition-all duration-200"
+                                                <RefreshCw className="h-4 w-4" />
+                                                Update
+                                            </Button>
+
+                                            <Button
+                                                variant="destructive"
+                                                className="flex items-center gap-2"
+                                                onClick={() =>
+                                                    removeAdmin(
+                                                        selectedUser.emp_id,
+                                                    )
+                                                }
                                             >
-                                                <i className="fa-solid fa-user-slash me-2"></i> Remove
-                                            </button>
+                                                <Trash2 className="h-4 w-4" />
+                                                Remove
+                                            </Button>
                                         </div>
                                     </div>
                                 )}
                         </div>
-                    </Modal>
-                )}
-            </DataTable>
+                    )}
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

@@ -201,7 +201,7 @@ export default function LadderChecklist({
                     <i className="fa-solid fa-clipboard"></i> Ladder Checklist
                 </h1>
 
-                {!["admin", "superadmin"].includes(
+                {!["superadmin"].includes(
                     emp_data?.emp_system_role,
                 ) && (
                     <button

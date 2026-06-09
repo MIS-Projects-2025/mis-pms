@@ -9,6 +9,14 @@ import { Input } from "@/Components/ui/input";
 import { Checkbox } from "@/Components/ui/checkbox";
 
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -315,7 +323,7 @@ export default function BoxingPrinterChecklist({
 
             {/* HEADER */}
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
+                <h1 className="text-2xl font-bold">
                     <i className="fa-solid fa-list-check"></i> Boxing Printer
                     Checklist
                 </h1>
@@ -741,14 +749,14 @@ export default function BoxingPrinterChecklist({
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-center text-2xl font-bold text-red-800 uppercase">
+                        <DialogTitle className="text-center text-2xl font-bold text-red-700 uppercase">
                             BOXING PRINTER STARTUP CHECKLIST
                         </DialogTitle>
                     </DialogHeader>
 
                     {/* FORM FIELDS */}
                     <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">
                                     Done By
@@ -768,15 +776,28 @@ export default function BoxingPrinterChecklist({
                                     Shift
                                 </label>
 
-                                <Input
+                                <Select
                                     value={selectedChecklist?.shift || ""}
-                                    onChange={(e) =>
+                                    onValueChange={(value) =>
                                         setSelectedChecklist((prev) => ({
                                             ...prev,
-                                            shift: e.target.value,
+                                            shift: value,
                                         }))
                                     }
-                                />
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Shift" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        <SelectItem value="A">
+                                            A - Shift
+                                        </SelectItem>
+                                        <SelectItem value="C">
+                                            C - Shift
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             <div className="space-y-2">

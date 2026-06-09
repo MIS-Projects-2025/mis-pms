@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
 import { useState, useEffect } from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, BadgeCheck } from "lucide-react";
 
 import {
     Dialog,
@@ -252,11 +252,16 @@ export default function ComputerChecklist({
         );
     };
 
-    const isVerifier = ["1268"].includes(emp_data?.emp_id);
+   const isAdmin = Number(emp_data?.emp_id) === 1268;
+
 
     const dataWithAction = tableData.data.map((item) => {
         const [dueYear, dueMonth, dueDay] = item.date_due.split("-");
         const [checkYear, checkMonth, checkDay] = item.date_checked.split("-");
+         const canModify =
+             !item.verified_by &&
+             (item.performed_by === emp_data?.emp_name || isAdmin);
+
 
         return {
             ...item,
@@ -274,29 +279,25 @@ export default function ComputerChecklist({
                         <Eye className="h-4 w-4" />{" "}
                     </Button>
 
-                    {((!item.verified_by &&
-                        item.performed_by === emp_data?.emp_name) ||
-                        Number(emp_data?.emp_id) === 1268) && (
-                            <>
-                                <Button
-                                    size="sm"
-                                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                                    onClick={() => openEditModal(item)}
-                                >
-                                    {" "}
-                                    <Pencil className="h-4 w-4" />{" "}
-                                </Button>
+                    {canModify && (
+                        <>
+                            <Button
+                                size="sm"
+                                className="bg-amber-500 hover:bg-amber-600 text-white"
+                                onClick={() => openEditModal(item)}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
 
-                                <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={() => handleDelete(item.id)}
-                                >
-                                    {" "}
-                                    <Trash2 className="h-4 w-4" />{""}
-                                </Button>
-                            </>
-                        )}
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(item.id)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </>
+                    )}
                 </div>
             ),
         };
@@ -312,7 +313,7 @@ export default function ComputerChecklist({
             <Head title="Computer Checklist" />
 
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
+                <h1 className="text-2xl font-bold">
                     <i className="fa-solid fa-list-check mr-2"></i> Computer
                     Checklist
                 </h1>
@@ -654,72 +655,106 @@ export default function ComputerChecklist({
                             </div>
 
                             {/* FIELDS */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                <Input
-                                    readOnly
-                                    value={viewItem.computer_name || "-"}
-                                    className="bg-muted"
-                                />
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Computer Name
+                                    </label>
+                                    <Input
+                                        readOnly
+                                        value={viewItem.computer_name || "-"}
+                                        className="bg-muted"
+                                    />
+                                </div>
 
-                                <Input
-                                    readOnly
-                                    className="bg-muted"
-                                    value={
-                                        viewItem.date_checked
-                                            ? new Date(
-                                                  viewItem.date_checked,
-                                              ).toLocaleDateString("en-US")
-                                            : "-"
-                                    }
-                                />
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Date Checked
+                                    </label>
+                                    <Input
+                                        readOnly
+                                        className="bg-muted"
+                                        value={
+                                            viewItem.date_checked
+                                                ? new Date(
+                                                      viewItem.date_checked,
+                                                  ).toLocaleDateString("en-US")
+                                                : "-"
+                                        }
+                                    />
+                                </div>
 
-                                <Input
-                                    readOnly
-                                    className="bg-muted"
-                                    value={
-                                        viewItem.date_due
-                                            ? new Date(
-                                                  viewItem.date_due,
-                                              ).toLocaleDateString("en-US")
-                                            : "-"
-                                    }
-                                />
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Date Due
+                                    </label>
+                                    <Input
+                                        readOnly
+                                        className="bg-muted"
+                                        value={
+                                            viewItem.date_due
+                                                ? new Date(
+                                                      viewItem.date_due,
+                                                  ).toLocaleDateString("en-US")
+                                                : "-"
+                                        }
+                                    />
+                                </div>
 
-                                <Input
-                                    readOnly
-                                    className="bg-muted"
-                                    value={viewItem.performed_by || "-"}
-                                />
+                                <div>
+                                    <label className="text-sm font-medium">
+                                        Performed By
+                                    </label>
+                                    <Input
+                                        readOnly
+                                        className="bg-muted"
+                                        value={viewItem.performed_by || "-"}
+                                    />
+                                </div>
 
                                 {/* VERIFIED */}
                                 <div className="flex items-center gap-2">
                                     {!viewItem.verified_by &&
                                     ["1268"].includes(emp_data.emp_id) ? (
                                         <>
+                                            <div>
+                                                <label className="text-sm font-medium">
+                                                    Verified By
+                                                </label>
+                                                <Input
+                                                    readOnly
+                                                    className="bg-muted"
+                                                    value={
+                                                        emp_data.emp_name || "-"
+                                                    }
+                                                />
+
+                                                <Button
+                                                    className="w-full mt-2"
+                                                    onClick={() =>
+                                                        handleVerify(
+                                                            viewItem.id,
+                                                        )
+                                                    }
+                                                >
+                                                    <BadgeCheck className="w-4 h-4" /> Verify
+                                                </Button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div>
+                                            <label className="text-sm font-medium">
+                                                Verified By
+                                            </label>
                                             <Input
                                                 readOnly
                                                 className="bg-muted"
-                                                value={emp_data.emp_name || "-"}
-                                            />
-
-                                            <Button
-                                                className="bg-green-600 hover:bg-green-700"
-                                                onClick={() =>
-                                                    handleVerify(viewItem.id)
+                                                value={
+                                                    viewItem.verified_by ||
+                                                    "Pending..."
                                                 }
-                                            >
-                                                Verify
-                                            </Button>
-                                        </>
-                                    ) : (
-                                        <Input
-                                            readOnly
-                                            className="bg-muted"
-                                            value={
-                                                viewItem.verified_by ||
-                                                "Pending..."
-                                            }
-                                        />
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>

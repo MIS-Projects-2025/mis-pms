@@ -35,6 +35,7 @@ export default function PrinterChecklist({
         const day = String(today.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
     });
+
     const [nextPm, setNextPm] = useState("");
     const [recommendations, setRecommendations] = useState("");
     const [checklistItems, setChecklistItems] = useState([]);
@@ -273,6 +274,12 @@ export default function PrinterChecklist({
         const [dueYear, dueMonth, dueDay] = item.pm_date.split("-");
         const [checkYear, checkMonth, checkDay] = item.next_pm.split("-");
 
+        const isAdmin = Number(emp_data?.emp_id) === 1268;
+
+        const canModify =
+            !item.verified_by &&
+            (item.performed_by === emp_data?.emp_name || isAdmin);
+
         return {
             ...item,
             pm_date: `${dueMonth}/${dueDay}/${dueYear}`,
@@ -288,8 +295,8 @@ export default function PrinterChecklist({
                                 items: Array.isArray(item.items)
                                     ? item.items
                                     : typeof item.items === "string"
-                                        ? JSON.parse(item.items)
-                                        : [],
+                                      ? JSON.parse(item.items)
+                                      : [],
                             });
 
                             setIsViewOpen(true);
@@ -298,38 +305,36 @@ export default function PrinterChecklist({
                         <Eye className="h-4 w-4" />
                     </Button>
 
-                    {((!item.verified_by &&
-                        item.performed_by === emp_data?.emp_name) ||
-                        Number(emp_data?.emp_id) === 1268) && (
-                            <>
-                                <Button
-                                    size="sm"
-                                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                                    onClick={() => {
-                                        setSelectedChecklist({
-                                            ...item,
-                                            items: Array.isArray(item.items)
-                                                ? item.items
-                                                : typeof item.items === "string"
-                                                    ? JSON.parse(item.items)
-                                                    : [],
-                                        });
+                    {canModify && (
+                        <>
+                            <Button
+                                size="sm"
+                                className="bg-amber-500 hover:bg-amber-600 text-white"
+                                onClick={() => {
+                                    setSelectedChecklist({
+                                        ...item,
+                                        items: Array.isArray(item.items)
+                                            ? item.items
+                                            : typeof item.items === "string"
+                                              ? JSON.parse(item.items)
+                                              : [],
+                                    });
 
-                                        setIsEditOpen(true);
-                                    }}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
+                                    setIsEditOpen(true);
+                                }}
+                            >
+                                <Pencil className="h-4 w-4" />
+                            </Button>
 
-                                <Button
-                                    size="sm"
-                                    className="bg-red-500 hover:bg-red-600 text-white"
-                                    onClick={() => handleDelete(item.id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </>
-                        )}
+                            <Button
+                                size="sm"
+                                className="bg-red-500 hover:bg-red-600 text-white"
+                                onClick={() => handleDelete(item.id)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </>
+                    )}
                 </div>
             ),
         };
@@ -340,7 +345,7 @@ export default function PrinterChecklist({
             <Head title="Printer Checklist" />
 
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
+                <h1 className="text-2xl font-bold">
                     <i className="fa-solid fa-print mr-2"></i> Printer Checklist
                 </h1>
                 <button
@@ -1012,54 +1017,90 @@ export default function PrinterChecklist({
                         </h2>
 
                         {/* TOP INPUTS */}
-                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
-                            <input
-                                type="date"
-                                value={pmDate}
-                                onChange={(e) => setPmDate(e.target.value)}
-                                className="border p-2 rounded text-sm"
-                            />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+                            {/* Printer */}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Printer Name
+                                </label>
+                                <select
+                                    value={selectedPrinter}
+                                    onChange={handlePrinterChange}
+                                    className="border p-2 rounded text-sm w-full"
+                                >
+                                    <option value="">Select Printer</option>
+                                    {printerOptions.map((p, i) => (
+                                        <option key={i} value={p.name}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                            <input
-                                type="text"
-                                value={emp_data?.emp_name}
-                                readOnly
-                                className="border p-2 rounded text-sm bg-gray-100"
-                            />
+                            {/* Serial Number */}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Serial Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={serialNumber}
+                                    readOnly
+                                    className="border p-2 rounded text-sm bg-gray-100 w-full"
+                                />
+                            </div>
 
-                            <select
-                                value={selectedPrinter}
-                                onChange={handlePrinterChange}
-                                className="border p-2 rounded text-sm"
-                            >
-                                <option value="">Select Printer</option>
-                                {printerOptions.map((p, i) => (
-                                    <option key={i} value={p.name}>
-                                        {p.name}
-                                    </option>
-                                ))}
-                            </select>
+                            {/* Location */}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Location
+                                </label>
+                                <input
+                                    type="text"
+                                    value={location}
+                                    readOnly
+                                    className="border p-2 rounded text-sm bg-gray-100 w-full"
+                                />
+                            </div>
 
-                            <input
-                                type="text"
-                                value={serialNumber}
-                                readOnly
-                                className="border p-2 rounded text-sm bg-gray-100"
-                            />
+                            {/* Performed By */}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Done By
+                                </label>
+                                <input
+                                    type="text"
+                                    value={selectedChecklist.performed_by}
+                                    readOnly
+                                    className="border p-2 rounded text-sm bg-gray-100 w-full"
+                                />
+                            </div>
 
-                            <input
-                                type="text"
-                                value={location}
-                                readOnly
-                                className="border p-2 rounded text-sm bg-gray-100"
-                            />
+                            {/* Date Done*/}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Date Done
+                                </label>
+                                <input
+                                    type="date"
+                                    value={pmDate}
+                                    onChange={(e) => setPmDate(e.target.value)}
+                                    className="border p-2 rounded text-sm w-full"
+                                />
+                            </div>
 
-                            <input
-                                type="date"
-                                value={nextPm}
-                                onChange={(e) => setNextPm(e.target.value)}
-                                className="border p-2 rounded text-sm"
-                            />
+                            {/* Date Due */}
+                            <div className="flex flex-col">
+                                <label className="text-sm font-medium mb-1">
+                                    Date Due
+                                </label>
+                                <input
+                                    type="date"
+                                    value={nextPm}
+                                    onChange={(e) => setNextPm(e.target.value)}
+                                    className="border p-2 rounded text-sm w-full"
+                                />
+                            </div>
                         </div>
 
                         {/* SECTION 1: First 4 CHECKBOX items */}

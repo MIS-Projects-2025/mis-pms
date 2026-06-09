@@ -1,51 +1,92 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
-import Modal from "@/Components/Modal";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/Components/ui/dialog";
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+
+import { Button } from "@/Components/ui/button";
+
+import { Users, IdCard, Building2, Briefcase, UserPlus } from "lucide-react";
 
 import { useState } from "react";
 
 export default function NewAdmin({ tableData, tableFilters, emp_data }) {
     const [role, setRole] = useState(null);
+    const [open, setOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     function addAdmin(id, name, job_title) {
         if (!role) return;
 
         router.post(
             route("addAdmin"),
-            { id, name, job_title, role }, // ✅ Isinama na ang job_title
+            { id, name, job_title, role },
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setOpen(false);
+                    setSelectedUser(null);
+                    setRole(null);
+
                     router.visit(route("admin"));
                 },
-            }
+            },
         );
     }
 
-    const tableModalClose = (close) => {
-        setRole(null);
-        close();
+    const openModal = (row) => {
+        setSelectedUser(row);
+        setRole("");
+        setOpen(true);
     };
 
     return (
         <AuthenticatedLayout>
             <Head title="Manage Administrators" />
 
+            {/* HEADER */}
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold">
-                    <i className="fa-solid fa-users-between-lines"></i> Employee List
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Employee List
                 </h1>
             </div>
 
+            {/* TABLE */}
             <DataTable
                 columns={[
                     { key: "EMPLOYID", label: "ID" },
                     { key: "EMPNAME", label: "Employee Name" },
                     { key: "JOB_TITLE", label: "Job Title" },
                     { key: "DEPARTMENT", label: "Department" },
+                    { key: "actions", label: "Action" },
                 ]}
-                data={tableData.data}
+                data={tableData.data.map((row) => ({
+                    ...row,
+                    actions: (
+                        <Button
+                            size="sm"
+                            className="flex items-center gap-2"
+                            onClick={() => openModal(row)}
+                        >
+                            <UserPlus className="h-4 w-4" />
+                            Add
+                        </Button>
+                    ),
+                }))}
                 meta={{
                     from: tableData.from,
                     to: tableData.to,
@@ -58,78 +99,109 @@ export default function NewAdmin({ tableData, tableFilters, emp_data }) {
                 filters={tableFilters}
                 rowKey="EMPLOYID"
                 showExport={false}
-            >
-                {(row, close) => (
-                    <Modal
-                        id="MasterlistRowModal"
-                        title="Employee Details"
-                        show={true}
-                        onClose={() => tableModalClose(close)}
-                        className="max-w-md w-full rounded-2xl shadow-xl bg-white dark:text-gray-200 dark:bg-gray-800 p-6 border border-gray-200 dark:border-gray-700"
-                    >
+            />
+
+            {/* SHADCN DIALOG */}
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <IdCard className="h-5 w-5 text-amber-500" />
+                            Employee Details
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {selectedUser && (
                         <div className="space-y-4">
-                            {/* Employee Info */}
-                            <div className="text-center">
-                                <div className="text-4xl text-amber-500 mb-2">
-                                    <i className="fa-solid fa-id-card"></i>
-                                </div>
-                                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-                                    {row.EMPNAME}
+                            {/* EMPLOYEE INFO */}
+                            <div className="text-center space-y-2">
+                                <Building2 className="h-10 w-10 mx-auto text-amber-500" />
+
+                                <h2 className="text-xl font-bold">
+                                    {selectedUser.EMPNAME}
                                 </h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Employee ID: <span className="font-semibold">{row.EMPLOYID}</span>
+
+                                <p className="text-sm text-gray-500">
+                                    Employee ID:{" "}
+                                    <span className="font-semibold">
+                                        {selectedUser.EMPLOYID}
+                                    </span>
                                 </p>
-                                <div className="mt-3 text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                                    <p>
-                                        <span className="font-semibold text-gray-700 dark:text-gray-200">
-                                            Job Title:
-                                        </span>{" "}
-                                        {row.JOB_TITLE}
-                                    </p>
-                                    <p>
-                                        <span className="font-semibold text-gray-700 dark:text-gray-200">
-                                            Department:
-                                        </span>{" "}
-                                        {row.DEPARTMENT}
-                                    </p>
-                                </div>
+
+                                <p className="text-sm flex items-center justify-center gap-1">
+                                    <Briefcase className="h-4 w-4" />
+                                    {selectedUser.JOB_TITLE}
+                                </p>
+
+                                <p className="text-sm flex items-center justify-center gap-1">
+                                    <Building2 className="h-4 w-4" />
+                                    {selectedUser.DEPARTMENT}
+                                </p>
                             </div>
 
-                            {/* Role Selector */}
-                            <div className="mt-6 space-y-3">
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            {/* ROLE SELECT */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold">
                                     Assign System Role
                                 </label>
-                                <select
-                                    onChange={(e) => setRole(e.target.value)}
-                                    className="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-2"
+
+                                <Select
+                                    value={role}
+                                    onValueChange={(value) => setRole(value)}
                                 >
-                                    <option value="">-- Select Role --</option>
-                                    {emp_data?.emp_system_role === "superadmin" && (
-                                        <option value="superadmin">Superadmin</option>
-                                    )}
-                                        <option value="admin">Admin</option>
-                                        <option value="supporttech">Support Technician</option>
-                                        <option value="networktech">Network Technician</option>
-                                        <option value="boxing">User Boxing</option>
-                                </select>
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select Role" />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {emp_data?.emp_system_role ===
+                                            "superadmin" && (
+                                            <SelectItem value="superadmin">
+                                                Superadmin
+                                            </SelectItem>
+                                        )}
+
+                                        <SelectItem value="admin">
+                                            Admin
+                                        </SelectItem>
+
+                                        <SelectItem value="supporttech">
+                                            Support Technician
+                                        </SelectItem>
+
+                                        <SelectItem value="networktech">
+                                            Network Technician
+                                        </SelectItem>
+
+                                        <SelectItem value="boxing">
+                                            User Boxing
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </div>
 
-                            {/* Action Buttons */}
+                            {/* ACTION BUTTON */}
                             {role && (
-                                <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <button
-                                        onClick={() => addAdmin(row.EMPLOYID, row.EMPNAME, row.JOB_TITLE)} // ✅ Ipinapasa na ang JOB_TITLE
-                                        className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 text-sm font-medium transition-all duration-200"
+                                <div className="flex justify-end pt-4 border-t">
+                                    <Button
+                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                                        onClick={() =>
+                                            addAdmin(
+                                                selectedUser.EMPLOYID,
+                                                selectedUser.EMPNAME,
+                                                selectedUser.JOB_TITLE,
+                                            )
+                                        }
                                     >
-                                        <i className="fa-solid fa-user-plus me-2"></i> Add as {role}
-                                    </button>
+                                        <UserPlus className="h-4 w-4" />
+                                        Add as {role}
+                                    </Button>
                                 </div>
                             )}
                         </div>
-                    </Modal>
-                )}
-            </DataTable>
+                    )}
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

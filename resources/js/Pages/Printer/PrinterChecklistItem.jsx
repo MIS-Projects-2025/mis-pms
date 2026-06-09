@@ -1,30 +1,47 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
-import Modal from "@/Components/Modal";
 import { useState } from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+
+// SHADCN
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/Components/ui/dialog";
+
 import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Textarea } from "@/Components/ui/textarea";
 
-export default function PrinterChecklistItem({ tableData, tableFilters, emp_data }) {
+// LUCIDE ICONS
+import { Eye, Pencil, Trash2, Plus, Send, X, FileText, Save } from "lucide-react";
 
-
-
+export default function PrinterChecklistItem({
+    tableData,
+    tableFilters,
+    emp_data,
+}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // VIEW MODAL
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+    // VIEW
+    const [isViewOpen, setIsViewOpen] = useState(false);
     const [viewItem, setViewItem] = useState(null);
 
-    // EDIT MODAL
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    // EDIT
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const [editForm, setEditForm] = useState({
         id: "",
         item: "",
     });
 
+    const [form, setForm] = useState({ item: "" });
+    const [draftItems, setDraftItems] = useState([]);
+
     const openViewModal = (item) => {
         setViewItem(item);
-        setIsViewModalOpen(true);
+        setIsViewOpen(true);
     };
 
     const openEditModal = (item) => {
@@ -32,41 +49,22 @@ export default function PrinterChecklistItem({ tableData, tableFilters, emp_data
             id: item.id,
             item: item.item,
         });
-        setIsEditModalOpen(true);
+        setIsEditOpen(true);
     };
-
 
     const updateItem = () => {
         router.put(
             route("printer-checklist-items.update", editForm.id),
             editForm,
             {
-                onSuccess: () => {
-                    alert("✅ Item updated successfully!");
-                    setIsEditModalOpen(false);
-                    window.location.reload();
-                },
-            }
+                onSuccess: () => setIsEditOpen(false),
+            },
         );
     };
 
-
-
-    const [form, setForm] = useState({
-        item: "",
-    });
-
-    const [draftItems, setDraftItems] = useState([]);
-
     const addToList = (e) => {
         e.preventDefault();
-
-        setDraftItems([
-            ...draftItems,
-            { item: form.item }
-        ]);
-
-        // clear form
+        setDraftItems([...draftItems, { item: form.item }]);
         setForm({ item: "" });
     };
 
@@ -74,58 +72,43 @@ export default function PrinterChecklistItem({ tableData, tableFilters, emp_data
         setDraftItems(draftItems.filter((_, i) => i !== index));
     };
 
-
     const submitAll = () => {
-        if (draftItems.length === 0) {
-            alert("No items to submit!");
-            return;
-        }
+        if (!draftItems.length) return;
 
-        router.post(route("printer-checklist-items.bulk-store"),
+        router.post(
+            route("printer-checklist-items.bulk-store"),
             { items: draftItems },
             {
                 onSuccess: () => {
                     setDraftItems([]);
                     setIsModalOpen(false);
-                    alert("✅ Items added successfully.");
-                    window.location.reload();
-                }
-            }
+                },
+            },
         );
     };
 
     const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this machine?")) {
-            router.delete(route("printer-checklist-items.destroy", id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    alert("✅ Checklist item removed successfully.");
-                    window.location.reload();
-                },
-            });
-        }
+        if (!confirm("Delete this item?")) return;
+
+        router.delete(route("printer-checklist-items.destroy", id));
     };
 
     const dataWithAction = tableData.data.map((item) => ({
         ...item,
         actions: (
-            <div className="flex space-x-1">
-
-                {/* <Button
-                            onClick={() => openViewModal(item)}
-                            className="block text-center px-3 py-1 text-md hover:bg-blue-600 bg-gray-500 text-white rounded border-2 border-gray-900"
-                        >
-                            <Eye className="h-4 w-4" />
-                        </Button> */}
+            <div className="flex gap-2">
                 <Button
+                    size="icon"
+                    className="bg-amber-500 hover:bg-amber-600"
                     onClick={() => openEditModal(item)}
-                    className="block text-center px-3 py-1 text-md hover:bg-blue-600 bg-gray-500 text-white rounded border-2 border-gray-900"
                 >
                     <Pencil className="h-4 w-4" />
                 </Button>
+
                 <Button
+                    size="icon"
+                    className="bg-red-500 hover:bg-red-600"
                     onClick={() => handleDelete(item.id)}
-                    className="block text-center px-3 py-1 text-md hover:bg-red-600 bg-gray-500 text-white rounded border-2 border-gray-900"
                 >
                     <Trash2 className="h-4 w-4" />
                 </Button>
@@ -133,256 +116,147 @@ export default function PrinterChecklistItem({ tableData, tableFilters, emp_data
         ),
     }));
 
-
     return (
         <AuthenticatedLayout>
-            <Head title="Manage Printer Checklist Items" />
+            <Head title="Printer Checklist Items" />
 
-            <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
-                    <i className="fa-solid fa-fill-drip"></i> Printer Checklist Items
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Printer Checklist Items
                 </h1>
 
-                {/* OPEN MODAL BUTTON */}
-                <button
+                <Button
+                    className="bg-green-600 hover:bg-green-700"
                     onClick={() => setIsModalOpen(true)}
-                    className="text-white bg-green-500 border-green-900 btn hover:bg-green-700"
                 >
-                    <i className="fa-solid fa-plus"></i> New Item
-                </button>
+                    <Plus className="h-4 w-4" />
+                    New Item
+                </Button>
             </div>
 
             {/* TABLE */}
             <DataTable
                 columns={[
-                    { key: "item", label: "Item " },
+                    { key: "item", label: "Item" },
                     { key: "created_by", label: "Created By" },
                     { key: "updated_by", label: "Updated By" },
                     { key: "actions", label: "Action" },
                 ]}
                 data={dataWithAction}
-                meta={{
-                    from: tableData.from,
-                    to: tableData.to,
-                    total: tableData.total,
-                    links: tableData.links,
-                    currentPage: tableData.current_page,
-                    lastPage: tableData.last_page,
-                }}
+                meta={tableData}
                 routeName={route("printer-checklist-items")}
                 filters={tableFilters}
                 rowKey="item"
                 showExport={false}
             />
 
-            {/* NEW ITEM MODAL */}
-            <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <div className="p-6">
-                    <h2 className="text-xl font-bold mb-4">
-                        <i className="fa-solid fa-plus mr-2 text-green-600 font-bold"></i>
-                        New Checklist Items
-                    </h2>
+            {/* ================= ADD MODAL ================= */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Plus className="h-5 w-5" />
+                            New Printer Checklist Item
+                        </DialogTitle>
+                    </DialogHeader>
 
-                    {/* INPUT FORM */}
-                    <form onSubmit={addToList}>
+                    <form onSubmit={addToList} className="space-y-3">
+                        <Textarea
+                            placeholder="Item"
+                            value={form.item}
+                            onChange={(e) => setForm({ item: e.target.value })}
+                        />
 
-                        <div className="mb-3">
-                            <label className="font-semibold">Item</label>
-                            <textarea
-                                className="w-full border rounded p-2 text-gray-700"
-                                value={form.item}
-                                onChange={(e) => setForm({ ...form, item: e.target.value })}
-                                required
-                            ></textarea>
-                        </div>
-
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full mb-4"
-                        >
-                            <i className="fa-solid fa-cart-plus mr-1"></i>
+                        <Button type="submit" className="w-full">
                             Add to List
-                        </button>
+                        </Button>
                     </form>
 
-
-                    {/* LIST PREVIEW */}
                     {draftItems.length > 0 && (
-                        <div className="mb-4">
-                            <h3 className="font-semibold mb-2">Items to be Added:</h3>
-                            <table className="w-full border text-sm">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="border p-2 text-gray-700">Item</th>
-                                        <th className="border p-2 text-center text-gray-700 w-20">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {draftItems.map((item, index) => (
-                                        <tr key={index}>
-                                            <td className="border p-2">{item.item}</td>
-                                            <td className="border p-2 text-center">
-                                                <button
-                                                    onClick={() => removeItem(index)}
-                                                    className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs"
-                                                >
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="border rounded p-2 space-y-2">
+                            {draftItems.map((item, i) => (
+                                <div
+                                    key={i}
+                                    className="flex justify-between items-center"
+                                >
+                                    <span className="text-sm">{item.item}</span>
+
+                                    <Button
+                                        size="icon"
+                                        variant="destructive"
+                                        onClick={() => removeItem(i)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-
-                    {/* ACTION BUTTONS */}
-                    <div className="flex justify-between mt-4">
-                        <button
-                            type="button"
+                    <div className="flex justify-between">
+                        <Button
+                            variant="destructive"
                             onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
                         >
-                            <i className="fa-solid fa-xmark mr-1"></i>
+                            <X className="h-4 w-4 mr-2" />
                             Close
-                        </button>
+                        </Button>
 
-                        <button
-                            type="button"
-                            onClick={submitAll}
-                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700"
-                        >
-                            <i className="fa-solid fa-paper-plane mr-1"></i>
-                            {/* Submit All ({draftItems.length}) */}
+                        <Button onClick={submitAll}>
+                            <Send className="h-4 w-4 mr-2" />
                             Submit
-                        </button>
+                        </Button>
                     </div>
-                </div>
-            </Modal>
+                </DialogContent>
+            </Dialog>
 
-            {/* VIEW ITEM MODAL */}
-            <Modal show={isViewModalOpen} onClose={() => setIsViewModalOpen(false)}>
-                <div className="p-6 bg-gradient-to-bl from-white to-black rounded-xl shadow-lg border border-gray-200 animate-fadeIn">
+            {/* ================= VIEW MODAL ================= */}
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>View Item</DialogTitle>
+                    </DialogHeader>
 
-                    {/* HEADER */}
-                    <div className="flex items-center mb-4 pb-3 border-b border-gray-200">
-                        <div className="p-2 bg-blue-100 rounded-full mr-3">
-                            <i className="fa-solid fa-eye text-blue-600 text-xl"></i>
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-100">
-                            View Checklist Item
-                        </h2>
-                    </div>
-
-                    {/* BODY CONTENT */}
                     {viewItem && (
-                        <div className="space-y-4 text-gray-700">
-
-                            <div>
-                                <p className="text-sm text-white">Item</p>
-
-                                <textarea
-                                    className="w-full bg-gray-100 p-2 rounded-md border border-gray-200 text-gray-700"
-                                    value={viewItem.item}
-                                    readOnly
-                                    rows={viewItem.item.split("\n").length + 7}
-                                ></textarea>
-
-                            </div>
-
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-white">Created By</p>
-                                    <p className="bg-gray-100 p-2 rounded-md border border-gray-200 font-medium">
-                                        {viewItem.created_by}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-white">Date Created</p>
-                                    <p className="bg-gray-100 p-2 rounded-md border border-gray-200">
-                                        {viewItem.date_created ? new Date(viewItem.date_created).toLocaleString("en-US", {
-                                            month: "2-digit",
-                                            day: "2-digit",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            hour12: false,
-                                        }) : ""}
-
-                                    </p>
-                                </div>
-                            </div>
-
+                        <div className="space-y-2">
+                            <p>
+                                <b>Item:</b> {viewItem.item}
+                            </p>
+                            <p>
+                                <b>Created By:</b> {viewItem.created_by}
+                            </p>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
 
-                    {/* FOOTER BUTTON */}
-                    <div className="flex justify-end mt-6">
-                        <button
-                            type="button"
-                            onClick={() => setIsViewModalOpen(false)}
-                            className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md active:scale-95 transition-all"
-                        >
-                            <i className="fa-solid fa-xmark mr-1"></i>
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+            {/* ================= EDIT MODAL ================= */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Pencil className="h-5 w-5" />
+                            Edit Item
+                        </DialogTitle>
+                    </DialogHeader>
 
+                    <Textarea
+                        value={editForm.item}
+                        onChange={(e) =>
+                            setEditForm({
+                                ...editForm,
+                                item: e.target.value,
+                            })
+                        }
+                    />
 
-            {/* EDIT ITEM MODAL */}
-            <Modal show={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
-                <div className="p-6 bg-gradient-to-bl from-white to-black rounded-xl shadow-lg border border-gray-200 animate-fadeIn">
-
-                    <div className="flex items-center mb-4 pb-3 border-b border-gray-200">
-                        <div className="p-2 bg-amber-100 rounded-full mr-3">
-                            <i className="fa-solid fa-edit text-amber-600 text-xl"></i>
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-100">
-                            Edit Checklist Item
-                        </h2>
-                    </div>
-                    <div className="mb-3">
-                        <label className="font-semibold text-white">Item</label>
-                        <textarea
-                            className="w-full border rounded p-2 text-gray-700"
-                            value={editForm.item}
-                            onChange={(e) =>
-                                setEditForm({ ...editForm, item: e.target.value })
-                            }
-                            rows={editForm.item.split("\n").length + 7}
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div className="flex justify-between mt-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsEditModalOpen(false)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-                        >
-                            <i className="fa-solid fa-xmark mr-1"></i>
-                            Cancel
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={updateItem}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-                        >
-                            <i className="fa-solid fa-floppy-disk mr-1"></i>
-                            Update
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-
-
+                    <Button className="w-full mt-3" onClick={updateItem}>
+                       <Save className="h-4 w-4" /> Save Changes
+                    </Button>
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }

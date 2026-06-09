@@ -191,7 +191,7 @@ export default function ComputerRepair({
             <Head title="Computer Repair List" />
 
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-pulse">
+                <h1 className="text-2xl font-bold">
                     <i className="fa-solid fa-list mr-2"></i> Computer Repair
                     List
                 </h1>

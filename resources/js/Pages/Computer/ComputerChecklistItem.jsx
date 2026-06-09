@@ -1,58 +1,51 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, usePage, router } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
-import Modal from "@/Components/Modal";
-import { useState } from "react";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/Components/ui/dialog";
+
 import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Textarea } from "@/Components/ui/textarea";
+import { Label } from "@/Components/ui/label";
 
-export default function ComputerChecklistItem({ tableData, tableFilters, emp_data }) {
+import {
+    Eye,
+    Pencil,
+    Trash2,
+    Plus,
+    Send,
+    X,
+    FileText,
+    Edit3,
+    Save,
+} from "lucide-react";
 
+import { useState } from "react";
 
-
+export default function ComputerChecklistItem({
+    tableData,
+    tableFilters,
+    emp_data,
+}) {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // VIEW MODAL
-    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+    // VIEW
+    const [isViewOpen, setIsViewOpen] = useState(false);
     const [viewItem, setViewItem] = useState(null);
 
-    // EDIT MODAL
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    // EDIT
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const [editForm, setEditForm] = useState({
         id: "",
         task: "",
         description: "",
     });
-
-    const openViewModal = (item) => {
-        setViewItem(item);
-        setIsViewModalOpen(true);
-    };
-
-    const openEditModal = (item) => {
-        setEditForm({
-            id: item.id,
-            task: item.task,
-            description: item.description,
-        });
-        setIsEditModalOpen(true);
-    };
-
-
-    const updateItem = () => {
-        router.put(
-            route("computer-checklist-items.update", editForm.id),
-            editForm,
-            {
-                onSuccess: () => {
-                    alert("✅ Item updated successfully!");
-                    setIsEditModalOpen(false);
-                    window.location.reload();
-                },
-            }
-        );
-    };
-
-
 
     const [form, setForm] = useState({
         task: "",
@@ -61,15 +54,42 @@ export default function ComputerChecklistItem({ tableData, tableFilters, emp_dat
 
     const [draftItems, setDraftItems] = useState([]);
 
+    // VIEW
+    const openView = (item) => {
+        setViewItem(item);
+        setIsViewOpen(true);
+    };
+
+    // EDIT
+    const openEdit = (item) => {
+        setEditForm({
+            id: item.id,
+            task: item.task,
+            description: item.description,
+        });
+        setIsEditOpen(true);
+    };
+
+    const updateItem = () => {
+        router.put(
+            route("computer-checklist-items.update", editForm.id),
+            editForm,
+            {
+                onSuccess: () => {
+                    setIsEditOpen(false);
+                },
+            },
+        );
+    };
+
     const addToList = (e) => {
         e.preventDefault();
 
         setDraftItems([
             ...draftItems,
-            { task: form.task, description: form.description }
+            { task: form.task, description: form.description },
         ]);
 
-        // clear form
         setForm({ task: "", description: "" });
     };
 
@@ -77,58 +97,43 @@ export default function ComputerChecklistItem({ tableData, tableFilters, emp_dat
         setDraftItems(draftItems.filter((_, i) => i !== index));
     };
 
-
     const submitAll = () => {
-        if (draftItems.length === 0) {
-            alert("No items to submit!");
-            return;
-        }
+        if (!draftItems.length) return;
 
-        router.post(route("computer-checklist-items.bulk-store"),
+        router.post(
+            route("computer-checklist-items.bulk-store"),
             { items: draftItems },
             {
                 onSuccess: () => {
                     setDraftItems([]);
                     setIsModalOpen(false);
-                    alert("✅ Items added successfully.");
-                    window.location.reload();
-                }
-            }
+                },
+            },
         );
     };
 
     const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this machine?")) {
-            router.delete(route("computer-checklist-items.destroy", id), {
-                preserveScroll: true,
-                onSuccess: () => {
-                    alert("✅ Checklist item removed successfully.");
-                    window.location.reload();
-                },
-            });
-        }
+        if (!confirm("Delete this item?")) return;
+
+        router.delete(route("computer-checklist-items.destroy", id));
     };
 
     const dataWithAction = tableData.data.map((item) => ({
         ...item,
         actions: (
-            <div className="flex space-x-1">
-
-                {/* <button
-                            onClick={() => openViewModal(item)}
-                            className="block text-center px-3 py-1 text-md hover:bg-blue-600 bg-gray-500 text-white rounded border-2 border-gray-900"
-                        >
-                            <i className="fa fa-eye"></i>
-                        </button> */}
+            <div className="flex gap-1">
                 <Button
-                    onClick={() => openEditModal(item)}
-                    className="block text-center px-3 py-1 text-md hover:bg-blue-600 bg-gray-500 text-white rounded border-2 border-gray-900"
+                    size="icon"
+                    className="bg-amber-400 hover:bg-amber-600 "
+                    onClick={() => openEdit(item)}
                 >
                     <Pencil className="h-4 w-4" />
                 </Button>
+
                 <Button
+                    size="icon"
+                    className="bg-red-500 hover:bg-red-600 "
                     onClick={() => handleDelete(item.id)}
-                    className="block text-center px-3 py-1 text-md hover:bg-red-600 bg-gray-500 text-white rounded border-2 border-gray-900"
                 >
                     <Trash2 className="h-4 w-4" />
                 </Button>
@@ -136,23 +141,24 @@ export default function ComputerChecklistItem({ tableData, tableFilters, emp_dat
         ),
     }));
 
-
     return (
         <AuthenticatedLayout>
-            <Head title="Manage Computer Checklist Items" />
+            <Head title="Computer Checklist Items" />
 
+            {/* HEADER */}
             <div className="flex items-center justify-between mb-4">
-                <h1 className="text-2xl font-bold animate-bounce">
-                    <i className="fa-solid fa-chart-diagram"></i> Computer Checklist Items
+                <h1 className="text-2xl font-bold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Computer Checklist Items
                 </h1>
 
-                {/* OPEN MODAL BUTTON */}
-                <button
+                <Button
+                    className="bg-green-600 hover:bg-green-700"
                     onClick={() => setIsModalOpen(true)}
-                    className="text-white bg-green-500 border-green-900 btn hover:bg-green-700"
                 >
-                    <i className="fa-solid fa-plus"></i> New Item
-                </button>
+                    <Plus className="h-4 w-4" />
+                    New Item
+                </Button>
             </div>
 
             {/* TABLE */}
@@ -179,245 +185,153 @@ export default function ComputerChecklistItem({ tableData, tableFilters, emp_dat
                 showExport={false}
             />
 
-            {/* NEW ITEM MODAL */}
-            <Modal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
-                <div className="p-6">
-                    <h2 className="text-xl font-bold mb-4">
-                        <i className="fa-solid fa-plus mr-2 text-green-600 font-bold"></i>
-                        New Checklist Items
-                    </h2>
+            {/* ================= CREATE DIALOG ================= */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Plus className="h-5 w-5" />
+                            New Checklist Item
+                        </DialogTitle>
+                    </DialogHeader>
 
-                    {/* INPUT FORM */}
-                    <form onSubmit={addToList}>
-                        <div className="mb-3">
-                            <label className="font-semibold">Task</label>
-                            <input
-                                type="text"
-                                className="w-full border rounded p-2 text-gray-700"
+                    <form onSubmit={addToList} className="space-y-4">
+                        <div className="space-y-1">
+                            <Label>Task</Label>
+                            <Input
                                 value={form.task}
-                                onChange={(e) => setForm({ ...form, task: e.target.value })}
-                                required
+                                onChange={(e) =>
+                                    setForm({ ...form, task: e.target.value })
+                                }
+                                placeholder="Enter task"
                             />
                         </div>
 
-                        <div className="mb-3">
-                            <label className="font-semibold">Description</label>
-                            <textarea
-                                className="w-full border rounded p-2 text-gray-700"
+                        <div className="space-y-1">
+                            <Label>Description</Label>
+                            <Textarea
                                 value={form.description}
-                                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                                required
-                            ></textarea>
+                                onChange={(e) =>
+                                    setForm({
+                                        ...form,
+                                        description: e.target.value,
+                                    })
+                                }
+                                placeholder="Enter description"
+                            />
                         </div>
 
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full mb-4"
-                        >
-                            <i className="fa-solid fa-cart-plus mr-1"></i>
+                        <Button type="submit" className="w-full">
                             Add to List
-                        </button>
+                        </Button>
                     </form>
 
-                    {/* LIST PREVIEW */}
-                    {/* LIST PREVIEW */}
+                    {/* PREVIEW */}
                     {draftItems.length > 0 && (
-                        <div className="mb-4">
-                            <h3 className="font-semibold mb-2">Items to be Added:</h3>
-                            <table className="w-full border text-sm">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="border p-2 text-gray-700">Task</th>
-                                        <th className="border p-2 text-gray-700">Description</th>
-                                        <th className="border p-2 text-center text-gray-700 w-20">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {draftItems.map((item, index) => (
-                                        <tr key={index}>
-                                            <td className="border p-2">{item.task}</td>
-                                            <td className="border p-2">{item.description}</td>
-                                            <td className="border p-2 text-center">
-                                                <button
-                                                    onClick={() => removeItem(index)}
-                                                    className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-xs"
-                                                >
-                                                    <i className="fa-solid fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="mt-4 border rounded-md p-3 space-y-2">
+                            {draftItems.map((item, i) => (
+                                <div
+                                    key={i}
+                                    className="flex items-center justify-between"
+                                >
+                                    <span className="text-sm">{item.task}</span>
+
+                                    <Button
+                                        size="icon"
+                                        variant="destructive"
+                                        onClick={() => removeItem(i)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-
-                    {/* ACTION BUTTONS */}
-                    <div className="flex justify-between mt-4">
-                        <button
-                            type="button"
+                    {/* ACTIONS */}
+                    <div className="flex justify-between pt-4">
+                        <Button
+                            variant="outline"
                             onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
                         >
-                            <i className="fa-solid fa-xmark mr-1"></i>
+                            <X className="h-4 w-4 mr-2" />
                             Close
-                        </button>
+                        </Button>
 
-                        <button
-                            type="button"
-                            onClick={submitAll}
-                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-700"
-                        >
-                            <i className="fa-solid fa-paper-plane mr-1"></i>
-                            {/* Submit All ({draftItems.length}) */}
+                        <Button onClick={submitAll}>
+                            <Send className="h-4 w-4 mr-2" />
                             Submit
-                        </button>
+                        </Button>
                     </div>
-                </div>
-            </Modal>
+                </DialogContent>
+            </Dialog>
 
-            {/* VIEW ITEM MODAL */}
-            <Modal show={isViewModalOpen} onClose={() => setIsViewModalOpen(false)}>
-                <div className="p-6 bg-gradient-to-bl from-white to-black rounded-xl shadow-lg border border-gray-200 animate-fadeIn">
+            {/* ================= VIEW DIALOG ================= */}
+            <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>View Item</DialogTitle>
+                    </DialogHeader>
 
-                    {/* HEADER */}
-                    <div className="flex items-center mb-4 pb-3 border-b border-gray-200">
-                        <div className="p-2 bg-blue-100 rounded-full mr-3">
-                            <i className="fa-solid fa-eye text-blue-600 text-xl"></i>
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-100">
-                            View Checklist Item
-                        </h2>
-                    </div>
-
-                    {/* BODY CONTENT */}
                     {viewItem && (
-                        <div className="space-y-4 text-gray-700">
-
-                            <div>
-                                <p className="text-sm text-white">Task</p>
-                                <p className="font-semibold bg-gray-100 p-2 rounded-md border border-gray-200">
-                                    {viewItem.task}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-white">Description</p>
-
-                                <textarea
-                                    className="w-full bg-gray-100 p-2 rounded-md border border-gray-200 text-gray-700"
-                                    value={viewItem.description}
-                                    readOnly
-                                    rows={viewItem.description.split("\n").length + 5}
-                                ></textarea>
-
-                            </div>
-
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-sm text-white">Created By</p>
-                                    <p className="bg-gray-100 p-2 rounded-md border border-gray-200 font-medium">
-                                        {viewItem.created_by}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <p className="text-sm text-white">Date Created</p>
-                                    <p className="bg-gray-100 p-2 rounded-md border border-gray-200">
-                                        {viewItem.date_created ? new Date(viewItem.date_created).toLocaleString("en-US", {
-                                            month: "2-digit",
-                                            day: "2-digit",
-                                            year: "numeric",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                            hour12: false,
-                                        }) : ""}
-
-                                    </p>
-                                </div>
-                            </div>
-
+                        <div className="space-y-2 text-sm">
+                            <p>
+                                <b>Task:</b> {viewItem.task}
+                            </p>
+                            <p>
+                                <b>Description:</b> {viewItem.description}
+                            </p>
+                            <p>
+                                <b>Created By:</b> {viewItem.created_by}
+                            </p>
                         </div>
                     )}
+                </DialogContent>
+            </Dialog>
 
-                    {/* FOOTER BUTTON */}
-                    <div className="flex justify-end mt-6">
-                        <button
-                            type="button"
-                            onClick={() => setIsViewModalOpen(false)}
-                            className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-md active:scale-95 transition-all"
-                        >
-                            <i className="fa-solid fa-xmark mr-1"></i>
-                            Close
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+            {/* ================= EDIT DIALOG ================= */}
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Edit3 className="h-5 w-5" />
+                            Edit Item
+                        </DialogTitle>
+                    </DialogHeader>
 
-
-            {/* EDIT ITEM MODAL */}
-            <Modal show={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
-                <div className="p-6 bg-gradient-to-bl from-white to-black rounded-xl shadow-lg border border-gray-200 animate-fadeIn">
-
-                    <div className="flex items-center mb-4 pb-3 border-b border-gray-200">
-                        <div className="p-2 bg-amber-100 rounded-full mr-3">
-                            <i className="fa-solid fa-edit text-amber-600 text-xl"></i>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <Label>Task</Label>
+                            <Input
+                                value={editForm.task}
+                                onChange={(e) =>
+                                    setEditForm({
+                                        ...editForm,
+                                        task: e.target.value,
+                                    })
+                                }
+                            />
                         </div>
-                        <h2 className="text-xl font-bold text-gray-100">
-                            Edit Checklist Item
-                        </h2>
+
+                        <div className="space-y-1">
+                            <Label>Description</Label>
+                            <Textarea
+                                value={editForm.description}
+                                onChange={(e) =>
+                                    setEditForm({
+                                        ...editForm,
+                                        description: e.target.value,
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <Button onClick={updateItem} className="w-full">
+                            <Save className="h-4 w-4" /> Save Changes
+                        </Button>
                     </div>
-                    <div className="mb-3">
-                        <label className="font-semibold text-white">Task</label>
-                        <input
-                            type="text"
-                            className="w-full border rounded p-2 text-gray-700"
-                            value={editForm.task}
-                            onChange={(e) =>
-                                setEditForm({ ...editForm, task: e.target.value })
-                            }
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3">
-                        <label className="font-semibold text-white">Description</label>
-                        <textarea
-                            className="w-full border rounded p-2 text-gray-700"
-                            value={editForm.description}
-                            onChange={(e) =>
-                                setEditForm({ ...editForm, description: e.target.value })
-                            }
-                            rows={editForm.description.split("\n").length + 6}
-                            required
-                        ></textarea>
-                    </div>
-
-                    <div className="flex justify-between mt-4">
-                        <button
-                            type="button"
-                            onClick={() => setIsEditModalOpen(false)}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-700"
-                        >
-                            <i className="fa-solid fa-xmark mr-1"></i>
-                            Cancel
-                        </button>
-
-                        <button
-                            type="button"
-                            onClick={updateItem}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700"
-                        >
-                            <i className="fa-solid fa-floppy-disk mr-1"></i>
-                            Update
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-
-
+                </DialogContent>
+            </Dialog>
         </AuthenticatedLayout>
     );
 }
