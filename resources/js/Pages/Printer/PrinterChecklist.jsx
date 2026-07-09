@@ -5,12 +5,7 @@ import { useState, useEffect } from "react";
 import { Select } from "antd";
 import { Button } from "@/Components/ui/button";
 
-import {
-    Eye,
-    Pencil,
-    Trash2,
-} from "lucide-react";
-
+import { Eye, Pencil, Trash2 } from "lucide-react";
 
 export default function PrinterChecklist({
     tableData,
@@ -224,7 +219,10 @@ export default function PrinterChecklist({
                 onSuccess: () => {
                     alert("✅ Checklist verified successfully!");
                     setIsViewOpen(false);
-                    window.location.reload();
+                    // window.location.reload();
+                    router.visit(
+                        `${route("printer-checklist")}?page=1&status=2`,
+                    );
                 },
                 onError: () => {
                     alert("❌ Error verifying checklist.");
@@ -277,8 +275,10 @@ export default function PrinterChecklist({
         const isAdmin = Number(emp_data?.emp_id) === 1268;
 
         const canModify =
-            !item.verified_by &&
-            (item.performed_by === emp_data?.emp_name || isAdmin);
+            // !item.verified_by &&
+            // (item.performed_by === emp_data?.emp_name || isAdmin);
+
+            item.performed_by === emp_data?.emp_name || isAdmin;
 
         return {
             ...item,

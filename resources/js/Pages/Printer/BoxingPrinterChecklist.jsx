@@ -126,7 +126,10 @@ export default function BoxingPrinterChecklist({
             {
                 onSuccess: () => {
                     alert("✅ Checklist approved!");
-                    window.location.reload();
+                    router.visit(
+                        `${route("boxing-printer-checklist")}?page=1&status=2`,
+                    );
+                    // window.location.reload();
 
                     // Update local state so input shows new value
                     setSelectedChecklist((prev) => ({

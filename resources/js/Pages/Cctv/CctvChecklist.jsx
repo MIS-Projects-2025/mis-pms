@@ -196,7 +196,8 @@ export default function CctvChecklist({
                 onSuccess: () => {
                     alert("✅ Checklist verified successfully!");
                     setViewModal(false);
-                    window.location.reload();
+                    router.visit(`${route("cctv.index")}?page=1&status=2`);
+                    // window.location.reload();
                 },
                 onError: () => {
                     alert("❌ Error verifying checklist.");

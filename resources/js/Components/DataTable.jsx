@@ -48,8 +48,6 @@ export default function DataTable({
         emp_data.emp_role || emp_data.emp_system_role,
     );
 
-    console.log("Session emp_data in DataTable.jsx:", canAccess);
-
     const [selected, setSelected] = useState([]);
     const [activeRow, setActiveRow] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");

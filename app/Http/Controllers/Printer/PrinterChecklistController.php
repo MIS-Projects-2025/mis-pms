@@ -79,22 +79,30 @@ class PrinterChecklistController extends Controller
             'checklist',
             'printer_checklists',
             [
-                'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
+                
 
-                    if ($request->filled('status')) {
-                      $query->where('status', $request->status);
-                    }
+'conditions' => function ($query) use ($request) {
 
-                    if ($request->filled('start') && $request->filled('end')) {
-                        $query->whereBetween('date_created', [
-                         $request->start,
-                        $request->end
-                        ]);
-                    }
+    $query->orderBy('pm_date', 'DESC');
 
-                return $query;
-                },
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    // Kapag may date filter ang user, gamitin iyon
+    if ($request->filled('start') && $request->filled('end')) {
+        $query->whereBetween('pm_date', [
+            $request->start,
+            $request->end
+        ]);
+    } else {
+        // Default: current month lang
+        $query->whereMonth('pm_date', Carbon::now()->month)
+              ->whereYear('pm_date', Carbon::now()->year);
+    }
+
+    return $query;
+},
 
                 'searchColumns' => ['printer_name', 'pm_date', 'performed_by', 'printer_name', 'serial_num', 'location', 'next_pm', 'verified_by'],
             ]
