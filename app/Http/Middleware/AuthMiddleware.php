@@ -110,6 +110,7 @@ class AuthMiddleware
             ->where('emp_id', $currentUser->emp_id)
             ->first();
 
+<<<<<<< Updated upstream
         // 🔹 Set session — IDs only, names resolved via HRIS Lookup API
         session(['emp_data' => [
             'token'          => $currentUser->token,
@@ -127,6 +128,21 @@ class AuthMiddleware
             'generated_at'   => $currentUser->generated_at,
             'emp_system_role' => $isAdmin->emp_role ?? null,
 
+=======
+        // 🔹 Set session
+        session(['emp_data' => [
+            'token'         => $currentUser->token,
+            'emp_id'        => $currentUser->emp_id,
+            'emp_name'      => $currentUser->emp_name,
+            'emp_firstname' => $currentUser->emp_firstname,
+            'emp_jobtitle'  => $currentUser->emp_jobtitle,
+            'emp_dept'      => $currentUser->emp_dept,
+            'emp_prodline'  => $currentUser->emp_prodline,
+            'emp_station'   => $currentUser->emp_station,
+            'emp_position'  => $currentUser->emp_position,
+            'generated_at'  => $currentUser->generated_at,
+            'emp_system_role' => $isAdmin->emp_role ?? null,
+>>>>>>> Stashed changes
         ]]);
 
         session()->save();
