@@ -119,7 +119,7 @@ export default function ComputerRepair({
 
             if (visitInventory) {
                 window.open(
-                    "http://192.168.2.221:8195/MIS-IS/hardware",
+                    "http://192.168.20.21:8195/MIS-IS/hardware",
                     "_blank",
                 );
             }
