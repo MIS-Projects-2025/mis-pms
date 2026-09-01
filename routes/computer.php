@@ -29,8 +29,4 @@ Route::prefix($app_name)->middleware(AuthMiddleware::class)->group(function () {
     Route::put("/computer-checklist-items/update/{id}", [ComputerChecklistItemController::class, 'update'])->name('computer-checklist-items.update');
     Route::delete("/computer-checklist-items/destroy/{id}", [ComputerChecklistItemController::class, 'destroy'])->name('computer-checklist-items.destroy');
   });
-
-  Route::get("/", [DashboardController::class, 'index'])->name('dashboard');
-  Route::get("/profile", [ProfileController::class, 'index'])->name('profile.index');
-  Route::post("/change-password", [ProfileController::class, 'changePassword'])->name('changePassword');
 });

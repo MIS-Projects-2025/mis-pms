@@ -33,7 +33,7 @@ class LadderChecklistController extends Controller
             'ladder_checklist',
             [
                 'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
+                    $query->orderBy('done_check', 'DESC');
 
                     if ($request->filled('status')) {
                       $query->where('status', $request->status);

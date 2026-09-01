@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
 import DataTable from "@/Components/DataTable";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Eye, Pencil, Trash2, BadgeCheck } from "lucide-react";
 
 import {
@@ -27,73 +27,15 @@ import { Textarea } from "@/Components/ui/textarea";
 import { Checkbox } from "@/Components/ui/checkbox";
 import { Label } from "@/Components/ui/label";
 
-import { X, Save } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
 
-// ─── Searchable Combobox ───────────────────────────────────────────────────────
-function ComboboxSelect({
-    value,
-    onChange,
-    options,
-    placeholder = "Search computer...",
-}) {
-    const [query, setQuery] = useState("");
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-
-    const filtered = options.filter((opt) =>
-        opt.toLowerCase().includes(query.toLowerCase()),
-    );
-
-    useEffect(() => {
-        const handler = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-        };
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            <input
-                type="text"
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-background"
-                placeholder={placeholder}
-                value={open ? query : value}
-                onFocus={() => {
-                    setOpen(true);
-                    setQuery("");
-                }}
-                onChange={(e) => {
-                    setQuery(e.target.value);
-                    setOpen(true);
-                }}
-            />
-            {open && filtered.length > 0 && (
-                <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto border rounded-md bg-popover shadow-md text-sm">
-                    {filtered.map((opt) => (
-                        <li
-                            key={opt}
-                            className="px-3 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                            onMouseDown={() => {
-                                onChange(opt);
-                                setQuery("");
-                                setOpen(false);
-                            }}
-                        >
-                            {opt}
-                        </li>
-                    ))}
-                </ul>
-            )}
-            {open && filtered.length === 0 && (
-                <div className="absolute z-50 w-full mt-1 border rounded-md bg-popover shadow-md text-sm px-3 py-2 text-muted-foreground">
-                    No results found
-                </div>
-            )}
-        </div>
-    );
-}
-// ──────────────────────────────────────────────────────────────────────────────
+import { X, Save, FileText, Check } from "lucide-react";
 
 export default function ComputerChecklist({
     tableData,
@@ -102,6 +44,7 @@ export default function ComputerChecklist({
     computerName,
     emp_data,
 }) {
+    const { Option } = Select;
     const [isOpen, setIsOpen] = useState(false);
     const [checklistItems, setChecklistItems] = useState([]);
     const [selectedComputer, setSelectedComputer] = useState("");
@@ -122,7 +65,9 @@ export default function ComputerChecklist({
 
     const getLastDayAfterSixMonths = (date) => {
         const d = typeof date === "string" ? parseLocalDate(date) : date;
+
         const lastDay = new Date(d.getFullYear(), d.getMonth() + 7, 0);
+
         return formatDate(lastDay);
     };
 
@@ -193,6 +138,7 @@ export default function ComputerChecklist({
 
     // Open view modal
     const openViewModal = (item) => {
+        // Ensure items is an array
         const items =
             typeof item.items === "string"
                 ? JSON.parse(item.items)
@@ -255,7 +201,7 @@ export default function ComputerChecklist({
         }));
         setChecklistItems(itemsWithStatus);
 
-        setIsEditOpen(true);
+        setIsEditOpen(true); // <-- Hiwalay sa create modal
     };
 
     const handleUpdateChecklist = () => {
@@ -289,13 +235,12 @@ export default function ComputerChecklist({
             {
                 onSuccess: () => {
                     alert("✅ Checklist verified successfully!");
+                    // Update local viewItem state so button disappears
                     setViewItem((prev) => ({
                         ...prev,
                         verified_by: emp_data?.emp_name || "Verified",
                     }));
-                    router.visit(
-                        `${route("computer-checklist")}?page=1&status=2`,
-                    );
+                    window.location.reload();
                 },
                 onError: () => {
                     alert("❌ Error verifying checklist.");
@@ -317,6 +262,7 @@ export default function ComputerChecklist({
             ...item,
             date_due: `${dueMonth}/${dueDay}/${dueYear}`,
             date_checked: `${checkMonth}/${checkDay}/${checkYear}`,
+
             actions: (
                 <div className="flex items-center gap-2">
                     <Button
@@ -324,7 +270,8 @@ export default function ComputerChecklist({
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => openViewModal(item)}
                     >
-                        <Eye className="h-4 w-4" />
+                        {" "}
+                        <Eye className="h-4 w-4" />{" "}
                     </Button>
 
                     {canModify && (
@@ -406,7 +353,7 @@ export default function ComputerChecklist({
                 ]}
             />
 
-            {/* ── CREATE MODAL ───────────────────────────────────────────── */}
+            {/* Create */}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
                     <DialogHeader>
@@ -420,16 +367,28 @@ export default function ComputerChecklist({
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
                             <Label>Computer Name</Label>
-                            <ComboboxSelect
+
+                            <Select
                                 value={selectedComputer}
-                                onChange={setSelectedComputer}
-                                options={hostnames}
-                                placeholder="Search computer..."
-                            />
+                                onValueChange={setSelectedComputer}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Computer" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    {hostnames.map((host) => (
+                                        <SelectItem key={host} value={host}>
+                                            {host}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
                             <Label>Date Done</Label>
+
                             <Input
                                 type="date"
                                 value={dateChecked}
@@ -439,6 +398,7 @@ export default function ComputerChecklist({
 
                         <div className="space-y-2">
                             <Label>Date Due</Label>
+
                             <Input
                                 type="date"
                                 value={dateDue}
@@ -448,6 +408,7 @@ export default function ComputerChecklist({
 
                         <div className="space-y-2">
                             <Label>Done By</Label>
+
                             <Input
                                 value={emp_data?.emp_name ?? ""}
                                 readOnly
@@ -464,7 +425,9 @@ export default function ComputerChecklist({
                                     <TableHead className="w-16">
                                         Item#
                                     </TableHead>
+
                                     <TableHead>Task</TableHead>
+
                                     <TableHead>Description</TableHead>
 
                                     <TableHead className="w-24">
@@ -478,6 +441,7 @@ export default function ComputerChecklist({
                                                     const status = checked
                                                         ? "ok"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -504,6 +468,7 @@ export default function ComputerChecklist({
                                                     const status = checked
                                                         ? "repair"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -529,6 +494,7 @@ export default function ComputerChecklist({
                                                     const status = checked
                                                         ? "na"
                                                         : null;
+
                                                     setChecklistItems((prev) =>
                                                         prev.map((item) => ({
                                                             ...item,
@@ -549,7 +515,9 @@ export default function ComputerChecklist({
                                 {checklistItems.map((item, index) => (
                                     <TableRow key={index}>
                                         <TableCell>{index + 1}</TableCell>
+
                                         <TableCell>{item.task}</TableCell>
+
                                         <TableCell className="whitespace-pre-line">
                                             {item.description}
                                         </TableCell>
@@ -610,6 +578,7 @@ export default function ComputerChecklist({
                     {/* RECOMMENDATIONS */}
                     <div className="space-y-2">
                         <Label>Recommendations</Label>
+
                         <Textarea
                             rows={5}
                             value={recommendations}
@@ -624,24 +593,25 @@ export default function ComputerChecklist({
                             className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
                             onClick={toggleModal}
                         >
-                            <X className="h-4 w-4 mr-1" />
+                            <X className="h-4 w-4" />
                             Close
                         </Button>
 
-                        {canSave && (
-                            <Button
-                                onClick={handleSaveChecklist}
-                                className="flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
-                            >
-                                <Save className="h-4 w-4 mr-1" />
-                                Submit
-                            </Button>
-                        )}
+                        <Button
+                            onClick={handleSaveChecklist}
+                            disabled={!canSave}
+                            className={`flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md ${
+                                !canSave ? "hidden" : ""
+                            }`}
+                        >
+                            <Save className="h-4 w-4" />
+                            Submit
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/* ── VIEW MODAL ─────────────────────────────────────────────── */}
+            {/* View Modal */}
             <Dialog
                 open={isViewOpen && !!viewItem}
                 onOpenChange={(open) => {
@@ -741,25 +711,32 @@ export default function ComputerChecklist({
                                 <div className="flex items-center gap-2">
                                     {!viewItem.verified_by &&
                                     ["1268"].includes(emp_data.emp_id) ? (
-                                        <div>
-                                            <label className="text-sm font-medium">
-                                                Verified By
-                                            </label>
-                                            <Input
-                                                readOnly
-                                                className="bg-muted"
-                                                value={emp_data.emp_name || "-"}
-                                            />
-                                            <Button
-                                                className="w-full mt-2"
-                                                onClick={() =>
-                                                    handleVerify(viewItem.id)
-                                                }
-                                            >
-                                                <BadgeCheck className="w-4 h-4 mr-1" />
-                                                Verify
-                                            </Button>
-                                        </div>
+                                        <>
+                                            <div>
+                                                <label className="text-sm font-medium">
+                                                    Verified By
+                                                </label>
+                                                <Input
+                                                    readOnly
+                                                    className="bg-muted"
+                                                    value={
+                                                        emp_data.emp_name || "-"
+                                                    }
+                                                />
+
+                                                <Button
+                                                    className="w-full mt-2"
+                                                    onClick={() =>
+                                                        handleVerify(
+                                                            viewItem.id,
+                                                        )
+                                                    }
+                                                >
+                                                    <BadgeCheck className="w-4 h-4" />{" "}
+                                                    Verify
+                                                </Button>
+                                            </div>
+                                        </>
                                     ) : (
                                         <div>
                                             <label className="text-sm font-medium">
@@ -812,6 +789,7 @@ export default function ComputerChecklist({
                                                         <TableCell className="whitespace-pre-line">
                                                             {item.description}
                                                         </TableCell>
+
                                                         <TableCell className="text-center">
                                                             <Checkbox
                                                                 checked={
@@ -821,6 +799,7 @@ export default function ComputerChecklist({
                                                                 disabled
                                                             />
                                                         </TableCell>
+
                                                         <TableCell className="text-center">
                                                             <Checkbox
                                                                 checked={
@@ -830,6 +809,7 @@ export default function ComputerChecklist({
                                                                 disabled
                                                             />
                                                         </TableCell>
+
                                                         <TableCell className="text-center">
                                                             <Checkbox
                                                                 checked={
@@ -877,9 +857,10 @@ export default function ComputerChecklist({
                 </DialogContent>
             </Dialog>
 
-            {/* ── EDIT MODAL ─────────────────────────────────────────────── */}
+            {/* EDIT MODAL */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+                    {/* HEADER */}
                     <DialogHeader>
                         <DialogTitle className="text-center text-red-800 uppercase text-xl font-bold">
                             Preventive Maintenance Checklist for Desktop PCs and
@@ -889,18 +870,31 @@ export default function ComputerChecklist({
 
                     {/* BASIC INFO */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                        {/* Computer Name */}
                         <div>
                             <label className="text-sm font-medium">
                                 Computer Name
                             </label>
-                            <ComboboxSelect
+
+                            <Select
                                 value={selectedComputer}
-                                onChange={setSelectedComputer}
-                                options={hostnames}
-                                placeholder="Search computer..."
-                            />
+                                onValueChange={setSelectedComputer}
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select Computer..." />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    {hostnames.map((host) => (
+                                        <SelectItem key={host} value={host}>
+                                            {host}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
+                        {/* Date Done */}
                         <div>
                             <label className="text-sm font-medium">
                                 Date Done
@@ -913,6 +907,7 @@ export default function ComputerChecklist({
                             />
                         </div>
 
+                        {/* Date Due */}
                         <div>
                             <label className="text-sm font-medium">
                                 Date Due
@@ -920,6 +915,7 @@ export default function ComputerChecklist({
                             <Input type="date" value={dateDue} readOnly />
                         </div>
 
+                        {/* Done By */}
                         <div>
                             <label className="text-sm font-medium">
                                 Done By
@@ -938,67 +934,60 @@ export default function ComputerChecklist({
                                     <TableHead>Description</TableHead>
 
                                     <TableHead className="text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span>OK</span>
-                                            <Checkbox
-                                                checked={checklistItems.every(
-                                                    (i) => i.status === "ok",
-                                                )}
-                                                onCheckedChange={(checked) => {
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status: checked
-                                                                ? "ok"
-                                                                : null,
-                                                        })),
-                                                    );
-                                                }}
-                                            />
-                                        </div>
+                                        OK
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "ok",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "ok"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
                                     </TableHead>
 
                                     <TableHead className="text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span>REPAIR</span>
-                                            <Checkbox
-                                                checked={checklistItems.every(
-                                                    (i) =>
-                                                        i.status === "repair",
-                                                )}
-                                                onCheckedChange={(checked) => {
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status: checked
-                                                                ? "repair"
-                                                                : null,
-                                                        })),
-                                                    );
-                                                }}
-                                            />
-                                        </div>
+                                        REPAIR
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "repair",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "repair"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
                                     </TableHead>
 
                                     <TableHead className="text-center">
-                                        <div className="flex flex-col items-center">
-                                            <span>N/A</span>
-                                            <Checkbox
-                                                checked={checklistItems.every(
-                                                    (i) => i.status === "na",
-                                                )}
-                                                onCheckedChange={(checked) => {
-                                                    setChecklistItems((prev) =>
-                                                        prev.map((item) => ({
-                                                            ...item,
-                                                            status: checked
-                                                                ? "na"
-                                                                : null,
-                                                        })),
-                                                    );
-                                                }}
-                                            />
-                                        </div>
+                                        N/A
+                                        <Checkbox
+                                            checked={checklistItems.every(
+                                                (i) => i.status === "na",
+                                            )}
+                                            onCheckedChange={(checked) => {
+                                                setChecklistItems((prev) =>
+                                                    prev.map((item) => ({
+                                                        ...item,
+                                                        status: checked
+                                                            ? "na"
+                                                            : null,
+                                                    })),
+                                                );
+                                            }}
+                                        />
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -1012,6 +1001,7 @@ export default function ComputerChecklist({
                                             {item.description}
                                         </TableCell>
 
+                                        {/* OK */}
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={item.status === "ok"}
@@ -1024,6 +1014,7 @@ export default function ComputerChecklist({
                                             />
                                         </TableCell>
 
+                                        {/* REPAIR */}
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={
@@ -1038,6 +1029,7 @@ export default function ComputerChecklist({
                                             />
                                         </TableCell>
 
+                                        {/* N/A */}
                                         <TableCell className="text-center">
                                             <Checkbox
                                                 checked={item.status === "na"}

@@ -38,7 +38,7 @@ class CctvChecklistController extends Controller
             'cctv_checklists',
             [
                 'conditions' => function ($query) use ($request) {
-                    $query->orderBy('id', 'DESC');
+                    $query->orderBy('date_performed', 'DESC');
 
                     if ($request->filled('status')) {
                       $query->where('status', $request->status);

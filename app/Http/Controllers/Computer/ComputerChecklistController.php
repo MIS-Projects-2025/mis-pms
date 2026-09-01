@@ -24,11 +24,30 @@ class ComputerChecklistController extends Controller
     public function index(Request $request)
     {
 
+        $today = Carbon::today();
+
         $computerChecklists = DB::connection('checklist')->table('computers_checklist_items')->get();
+
+        $Computers = DB::connection('mysql')->table('computer_checklists')->get();
+
+        $existingChecklist = DB::connection('checklist')
+            ->table('computer_checklists')
+            ->whereIn('id', function ($sub) {
+             $sub->selectRaw('MAX(id)')
+            ->from('computer_checklists')
+            ->groupBy('computer_name');
+             })
+             ->where('date_due', '>', $today->copy()->addDay()->toDateString()) 
+            ->pluck('computer_name')
+            ->toArray();
+
+           
+            
 
         $computerName = DB::connection('mis')
             ->table('hardware')
             ->where('status', '1')
+            ->whereNotIn('hostname', $existingChecklist)
             ->orderBy('hostname', 'asc')
             ->get();
 
@@ -39,7 +58,7 @@ class ComputerChecklistController extends Controller
             'computer_checklists',
             [
                 'conditions' => function ($query) use ($request) {
-    $query->orderBy('id', 'DESC');
+    $query->orderBy('date_checked', 'DESC');
 
     if ($request->filled('status')) {
         $query->where('status', $request->status);

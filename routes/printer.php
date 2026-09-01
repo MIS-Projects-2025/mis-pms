@@ -54,8 +54,4 @@ Route::prefix($app_name)->middleware(AuthMiddleware::class)->group(function () {
     Route::delete("/boxing/printer-checklist/destroy/{id}", [BoxingPrinterChecklistController::class, 'destroy'])->name('boxing-printer-checklist.destroy');
     Route::get('/boxing/boxing-printer-checklist/pdf/{id}', [BoxingPrinterChecklistController::class, 'pdf'])->name('boxing-printer-checklist.pdf');
   });
-
-  Route::get("/", [DashboardController::class, 'index'])->name('dashboard');
-  Route::get("/profile", [ProfileController::class, 'index'])->name('profile.index');
-  Route::post("/change-password", [ProfileController::class, 'changePassword'])->name('changePassword');
 });
