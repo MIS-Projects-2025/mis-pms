@@ -107,6 +107,7 @@ export default function ComputerChecklist({
     const [selectedComputer, setSelectedComputer] = useState("");
     const [performedBy, setPerformedBy] = useState("");
     const [recommendations, setRecommendations] = useState("");
+    const [submitting, setSubmitting] = useState(false);
 
     const parseLocalDate = (str) => {
         const [year, month, day] = str.split("-").map(Number);
@@ -126,10 +127,9 @@ export default function ComputerChecklist({
         return formatDate(lastDay);
     };
 
-    const [dateChecked, setDateChecked] = useState(() => {
-        const today = new Date();
-        return today.toISOString().split("T")[0];
-    });
+    const [dateChecked, setDateChecked] = useState(() =>
+        formatDate(new Date()),
+    );
 
     const [dateDue, setDateDue] = useState(() =>
         getLastDayAfterSixMonths(new Date()),
@@ -179,6 +179,9 @@ export default function ComputerChecklist({
         );
     };
 
+    const firstError = (errors, fallback) =>
+        errors?.computer_name || Object.values(errors || {})[0] || fallback;
+
     const handleDelete = (id) => {
         if (confirm("Are you sure you want to delete this checklist?")) {
             router.delete(route("computer-checklist.destroy", id), {
@@ -207,11 +210,12 @@ export default function ComputerChecklist({
     };
 
     const handleSaveChecklist = () => {
+        if (submitting) return;
+
         const payload = {
             computer_name: selectedComputer,
             date_checked: dateChecked,
             date_due: dateDue,
-            performed_by: emp_data?.emp_name || "",
             items: checklistItems.map((item) => ({
                 task: item.task,
                 description: item.description,
@@ -221,6 +225,8 @@ export default function ComputerChecklist({
         };
 
         router.post(route("computer-checklist.store"), payload, {
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
             onSuccess: () => {
                 alert("✅ Checklist saved successfully!");
                 toggleModal();
@@ -228,7 +234,7 @@ export default function ComputerChecklist({
             },
             onError: (errors) => {
                 console.error(errors);
-                alert("❌ Error saving checklist.");
+                alert("❌ " + firstError(errors, "Error saving checklist."));
             },
         });
     };
@@ -259,6 +265,8 @@ export default function ComputerChecklist({
     };
 
     const handleUpdateChecklist = () => {
+        if (submitting) return;
+
         const payload = {
             computer_name: selectedComputer,
             date_checked: dateChecked,
@@ -269,13 +277,16 @@ export default function ComputerChecklist({
         };
 
         router.put(route("computer-checklist.update", editId), payload, {
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
             onSuccess: () => {
                 alert("✅ Checklist updated successfully!");
                 setIsEditOpen(false);
                 window.location.reload();
             },
-            onError: () => {
-                alert("❌ Error updating checklist.");
+            onError: (errors) => {
+                console.error(errors);
+                alert("❌ " + firstError(errors, "Error updating checklist."));
             },
         });
     };
@@ -631,10 +642,11 @@ export default function ComputerChecklist({
                         {canSave && (
                             <Button
                                 onClick={handleSaveChecklist}
+                                disabled={submitting}
                                 className="flex items-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
                             >
                                 <Save className="h-4 w-4 mr-1" />
-                                Submit
+                                {submitting ? "Saving..." : "Submit"}
                             </Button>
                         )}
                     </div>
@@ -1086,8 +1098,9 @@ export default function ComputerChecklist({
                         <Button
                             className="bg-green-600 hover:bg-green-700"
                             onClick={handleUpdateChecklist}
+                            disabled={submitting}
                         >
-                            Save
+                            {submitting ? "Saving..." : "Save"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
