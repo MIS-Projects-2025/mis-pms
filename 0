@@ -1,0 +1,95 @@
+[33m0275ec3[m Add various checklist and report templates for maintenance and inspections
+ .env.example                                       |    2 [32m+[m[31m-[m
+ TODO.md                                            |   13 [32m+[m
+ app/Http/Controllers/AuthenticationController.php  |   34 [32m+[m[31m-[m
+ .../Controllers/Cctv/CctvChecklistController.php   |  213 [32m+[m
+ .../Computer/ComputerChecklistController copy.php  |  171 [32m+[m
+ .../Computer/ComputerChecklistController.php       |  233 [32m++[m
+ .../Computer/ComputerChecklistItemController.php   |  111 [32m+[m
+ app/Http/Controllers/DashboardController.php       |   58 [32m+[m[31m-[m
+ app/Http/Controllers/ExportController.php          |   98 [32m+[m
+ app/Http/Controllers/General/AdminController.php   |   34 [32m+[m[31m-[m
+ app/Http/Controllers/InventoryController.php       |   31 [32m+[m
+ .../Ladder/LadderChecklistController.php           |  178 [32m+[m
+ .../Ladder/LadderChecklistItemController.php       |  164 [32m+[m
+ .../Printer/BoxingPrinterChecklistController.php   |  219 [32m++[m
+ .../BoxingPrinterChecklistItemController.php       |  109 [32m+[m
+ .../Printer/PrinterChecklistController.php         |  244 [32m++[m
+ .../Printer/PrinterChecklistItemController.php     |  109 [32m+[m
+ .../Reports/ComputerRepairController copy.php      |  229 [32m++[m
+ .../Reports/ComputerRepairController.php           |  247 [32m++[m
+ .../Reports/HardwareReportController.php           |  107 [32m+[m
+ app/Http/Controllers/SystemStatusController.php    |   48 [32m+[m
+ app/Http/Middleware/AdminMiddleware.php            |    2 [32m+[m[31m-[m
+ app/Http/Middleware/AuthMiddleware.php             |   38 [32m+[m[31m-[m
+ composer.json                                      |    1 [32m+[m
+ composer.lock                                      |  526 [32m++[m[31m-[m
+ config/database.php                                |   60 [32m+[m
+ docs/architecture.md                               |  272 [32m++[m
+ docs/configuration.md                              |  383 [32m++[m
+ docs/index.md                                      |   85 [32m+[m
+ docs/modules.md                                    |  466 [32m+++[m
+ docs/patterns.md                                   |  390 [32m++[m
+ docs/security.md                                   |  286 [32m++[m
+ package-lock.json                                  | 4119 [32m+++++++++++++++++[m[31m---[m
+ package.json                                       |   12 [32m+[m
+ public/MIS.png                                     |  Bin [31m0[m -> [32m3785[m bytes
+ resources/css/app.css                              |  112 [32m+[m[31m-[m
+ resources/js/Components/DataTable copy.jsx         |  408 [32m++[m
+ resources/js/Components/DataTable.jsx              |  428 [32m+[m[31m-[m
+ resources/js/Components/NavBar.jsx                 |    2 [32m+[m[31m-[m
+ resources/js/Components/sidebar/Navigation.jsx     |  125 [32m+[m[31m-[m
+ resources/js/Components/sidebar/SideBar.jsx        |   11 [32m+[m[31m-[m
+ resources/js/Components/sidebar/ThemeToggler.jsx   |    6 [32m+[m[31m-[m
+ resources/js/Components/ui/alert.jsx               |   47 [32m+[m
+ resources/js/Components/ui/badge.jsx               |   34 [32m+[m
+ resources/js/Components/ui/card.jsx                |   50 [32m+[m
+ resources/js/Components/ui/checkbox.jsx            |   22 [32m+[m
+ resources/js/Components/ui/command.jsx             |  117 [32m+[m
+ resources/js/Components/ui/input.jsx               |   19 [32m+[m
+ resources/js/Components/ui/popover.jsx             |   27 [32m+[m
+ resources/js/Components/ui/progress.jsx            |   21 [32m+[m
+ resources/js/Components/ui/select.jsx              |  119 [32m+[m
+ resources/js/Components/ui/table.jsx               |   86 [32m+[m
+ resources/js/Components/ui/tabs.jsx                |   41 [32m+[m
+ resources/js/Layouts/AuthenticatedLayout.jsx       |    6 [32m+[m[31m-[m
+ resources/js/Pages/Admin/Admin.jsx                 |  292 [32m+[m[31m-[m
+ resources/js/Pages/Admin/NewAdmin.jsx              |  227 [32m+[m[31m-[m
+ resources/js/Pages/Cctv/CctvChecklist.jsx          |  943 [32m+++++[m
+ .../Pages/Computer/ComputerChecklist 06242026.jsx  | 1089 [32m++++++[m
+ .../js/Pages/Computer/ComputerChecklist copy.jsx   | 1140 [32m++++++[m
+ resources/js/Pages/Computer/ComputerChecklist.jsx  | 1097 [32m++++++[m
+ .../Pages/Computer/ComputerChecklist.jsx_06252026  | 1089 [32m++++++[m
+ .../js/Pages/Computer/ComputerChecklistItem.jsx    |  337 [32m++[m
+ resources/js/Pages/Dashboard.jsx                   |  258 [32m+[m[31m-[m
+ resources/js/Pages/ExportPage.jsx                  |   90 [32m+[m
+ resources/js/Pages/Ladder/LadderChecklist.jsx      | 1063 [32m+++++[m
+ resources/js/Pages/Ladder/LadderChecklistItem.jsx  |  438 [32m+++[m
+ resources/js/Pages/Maintenance.jsx                 |  380 [32m++[m
+ .../js/Pages/Printer/BoxingPrinterChecklist.jsx    | 1012 [32m+++++[m
+ .../Pages/Printer/BoxingPrinterChecklistItem.jsx   |  262 [32m++[m
+ resources/js/Pages/Printer/PrinterChecklist.jsx    | 1285 [32m++++++[m
+ .../js/Pages/Printer/PrinterChecklistItem.jsx      |  262 [32m++[m
+ resources/js/Pages/Profile.jsx                     |  358 [32m+[m[31m-[m
+ .../js/Pages/Reports/ComputerRepair copy1.jsx      |  728 [32m++++[m
+ resources/js/Pages/Reports/ComputerRepair.jsx      |  735 [32m++++[m
+ .../js/Pages/Reports/HardwareReports copy.jsx      |  363 [32m++[m
+ resources/js/Pages/Reports/HardwareReports.jsx     |  557 [32m+++[m
+ resources/js/Pages/Unauthorized.jsx                |  108 [32m+[m[31m-[m
+ resources/views/app.blade.php                      |   37 [32m+[m[31m-[m
+ resources/views/checklist/boxing.blade.php         |  114 [32m+[m
+ resources/views/checklist/computer.blade.php       |  168 [32m+[m
+ resources/views/checklist/printer.blade.php        |  158 [32m+[m
+ resources/views/computer_repairs/pdf.blade.php     |  186 [32m+[m
+ resources/views/pdf/ladder_checklist.blade.php     |  202 [32m+[m
+ resources/views/reports/cctv-pdf.blade.php         |  164 [32m+[m
+ routes/cctv.php                                    |   22 [32m+[m
+ routes/computer.php                                |   32 [32m+[m
+ routes/export.php                                  |   22 [32m+[m
+ routes/general.php                                 |    3 [32m+[m
+ routes/inventory.php                               |   13 [32m+[m
+ routes/ladder.php                                  |   48 [32m+[m
+ routes/printer.php                                 |   57 [32m+[m
+ routes/reports.php                                 |   25 [32m+[m
+ routes/web.php                                     |   24 [32m+[m[31m-[m
+ 93 files changed, 25227 insertions(+), 1134 deletions(-)
