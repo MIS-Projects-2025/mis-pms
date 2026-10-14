@@ -5,10 +5,10 @@ namespace App\Http\Middleware;
 use App\Services\SystemStatusService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Cookie;
 
 class AuthMiddleware
 {
@@ -18,6 +18,13 @@ class AuthMiddleware
 
     public function handle(Request $request, Closure $next)
     {
+        // Internal service-to-service calls (e.g. Authify fetching employee data
+        // during login) carry X-Internal-Key and must bypass SSO entirely.
+        $internalKey = config('services.internal.key');
+        if ($internalKey && $request->header('X-Internal-Key') === $internalKey) {
+            return $next($request);
+        }
+
         $cookieName = env('SSO_COOKIE_NAME', 'sso_token');
 
         // 1️⃣ Get token sources (priority: query → cookie → session)
@@ -62,7 +69,8 @@ class AuthMiddleware
                 }
             }
 
-            return $next($request)->withCookie($cookie);
+            Cookie::queue($cookie);
+            return $next($request);
         }
 
         // 🔹 Fetch user from authify if session missing or token mismatch
@@ -75,8 +83,7 @@ class AuthMiddleware
             session()->forget('emp_data');
             // Clear this system's own cookie only
             $expiredCookie = cookie()->forget($cookieName);
-            Cookie::queue(Cookie::forget('sso_token'));
-            return $this->redirectToLogin($request);
+            return $this->redirectToLogin($request)->withCookie($expiredCookie);
         }
 
         $isFromAllowed = $currentUser->emp_from === null;
@@ -86,7 +93,7 @@ class AuthMiddleware
             session()->forget('emp_data');
             session()->flush();
             $redirectUrl = urlencode(route('dashboard'));
-            $authifyUrl  = "http://192.168.2.221:8200/logout?redirect={$redirectUrl}";
+            $authifyUrl  = "http://192.168.20.21:8200/logout?redirect={$redirectUrl}";
 
             return Inertia::render('Unauthorized', [
                 'logoutUrl' => $authifyUrl,
@@ -96,7 +103,13 @@ class AuthMiddleware
 
         $userId = $currentUser->emp_id;
 
+
         Log::info('User roles fetched', ['emp_id' => $userId]);
+
+        $isAdmin = DB::connection('checklist')->table('admin')
+            ->where('emp_id', $currentUser->emp_id)
+            ->first();
+
 
         // 🔹 Set session
         session(['emp_data' => [
@@ -110,9 +123,16 @@ class AuthMiddleware
             'emp_station'   => $currentUser->emp_station,
             'emp_position'  => $currentUser->emp_position,
             'generated_at'  => $currentUser->generated_at,
+            'emp_system_role' => $isAdmin->emp_role ?? null,
         ]]);
 
         session()->save();
+
+        if (session('emp_data') && !in_array(session('emp_data')['emp_system_role'], ['admin', 'superadmin', 'boxing', 'supporttech', 'networktech'])) {
+            session()->forget('emp_data');
+            session()->flush();
+            return redirect()->route('unauthorized');
+        }
 
         $request->setUserResolver(fn() => (object) session('emp_data'));
 
@@ -137,7 +157,11 @@ class AuthMiddleware
             }
         }
 
-        return $next($request)->withCookie($cookie);
+        Cookie::queue($cookie);
+
+
+
+        return $next($request);
     }
 
     /**
@@ -173,6 +197,6 @@ class AuthMiddleware
     private function redirectToLogin(Request $request)
     {
         $redirectUrl = urlencode($request->fullUrl());
-        return Inertia::location("http://192.168.2.221:8200/login?redirect={$redirectUrl}");
+         return Inertia::location("http://192.168.20.21:8200/login?redirect={$redirectUrl}");
     }
 }

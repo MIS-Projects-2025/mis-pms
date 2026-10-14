@@ -24,10 +24,16 @@ class AdminController extends Controller
     {
         $result = $this->datatable->handle(
             $request,
-            'mysql',
+            'checklist',
             'admin',
             [
-                'searchColumns' => ['EMPNAME', 'EMPLOYID', 'JOB_TITLE', 'DEPARTMENT'],
+                'conditions' => function ($query) {
+                    return $query
+                        ->whereNotIn('emp_role', ['superadmin'])
+                        ->OrderBy('emp_role', 'ASC');
+                },
+
+                'searchColumns' => ['emp_id', 'emp_name', 'emp_jobtitle', 'emp_role'],
             ]
         );
 
@@ -53,20 +59,27 @@ class AdminController extends Controller
 
     public function index_addAdmin(Request $request)
     {
+        $adminEmpIDs = DB::connection('checklist')->table('admin')->pluck('emp_id')->toArray();
+
         $result = $this->datatable->handle(
             $request,
-            'masterlist',
+            'masterlist', // connection for employee_masterlist
             'employee_masterlist',
             [
-                'conditions' => function ($query) {
+                'conditions' => function ($query) use ($adminEmpIDs) {
                     return $query
                         ->where('ACCSTATUS', 1)
-                        ->whereNot('EMPLOYID', 0);
+                        ->where('EMPLOYID', '!=', 0)
+                        ->whereIn('DEPARTMENT', ['MIS', 'Production', 'Production / Non - TNR'])
+                        ->whereIn('STATION', ['MIS', 'Network', 'Support', 'Boxing'])
+                        ->whereNotIn('EMPLOYID', $adminEmpIDs)
+                        ->OrderBy('DEPARTMENT', 'ASC');
                 },
 
                 'searchColumns' => ['EMPNAME', 'EMPLOYID', 'JOB_TITLE', 'DEPARTMENT'],
             ]
         );
+
 
         // FOR CSV EXPORTING
         if ($result instanceof \Symfony\Component\HttpFoundation\StreamedResponse) {
@@ -92,16 +105,17 @@ class AdminController extends Controller
     {
 
         // dd($request->all());
-        $checkIfExists = DB::table('admin')
+        $checkIfExists = DB::connection('checklist')->table('admin')
             ->where('emp_id', $request->input('id'))
             ->exists();
 
         if (!$checkIfExists) {
-            DB::table('admin')
+            DB::connection('checklist')->table('admin')
                 ->insert([
                     'emp_id' => $request->input('id'),
                     'emp_name' => $request->input('name'),
                     'emp_role' => $request->input('role'),
+                    'emp_jobtitle' => $request->input('job_title'),
                     'last_updated_by' => session('emp_data')['emp_id'],
                 ]);
         }
@@ -111,11 +125,11 @@ class AdminController extends Controller
 
     public function removeAdmin(Request $request)
     {
-        DB::table('admin')
+        DB::connection('checklist')->table('admin')
             ->where('emp_id', $request->input('id'))
             ->delete();
 
-        return back()->with('success', 'Admin removed successfully.');
+        return back()->with('success', 'User removed successfully.');
     }
 
     public function changeAdminRole(Request $request)
@@ -123,7 +137,7 @@ class AdminController extends Controller
         $id = $request->input('id');
         $role = $request->input('role');
 
-        DB::table('admin')
+        DB::connection('checklist')->table('admin')
             ->where('emp_id', $id)
             ->update([
                 'emp_role' => $role,

@@ -29,7 +29,7 @@ import {
     MonitorSmartphone,
     ShieldAlert,
     ShieldCheck,
-    FileWarning,
+    ListTodo,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -43,7 +43,7 @@ export default function Sidebar() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const isAdmin = emp_data?.emp_id == 1705;
+    const isAdmin = emp_data?.emp_id == 1328;
     const isInMaintenance = system_status?.status === "maintenance";
 
     useEffect(() => setMounted(true), []);
@@ -163,7 +163,7 @@ export default function Sidebar() {
                             )}
                         >
                             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-primary shadow-md">
-                                <FileWarning className="w-4 h-4 text-primary-foreground" />
+                                <ListTodo className="w-4 h-4 text-primary-foreground" />
                             </div>
 
                             {isSidebarOpen && (
@@ -175,10 +175,11 @@ export default function Sidebar() {
                                         {formattedAppName}
                                     </span>
                                     <span
-                                        className="text-[7px] font-medium tracking-widest uppercase
+                                        className="text-[6px] font-medium font-bold tracking-widest uppercase
                                         text-primary/70"
                                     >
-                                        Workspace
+                                        MIS Preventive Maintenance Checklist
+                                        System
                                     </span>
                                 </div>
                             )}

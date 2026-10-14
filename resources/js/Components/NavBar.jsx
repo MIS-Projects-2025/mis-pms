@@ -64,7 +64,7 @@ export default function NavBar() {
                                             className={cn(
                                                 "text-xs font-bold text-white",
                                                 isDark
-                                                    ? "bg-primary"
+                                                    ? "bg-primary text-black"
                                                     : "bg-primary",
                                             )}
                                         >

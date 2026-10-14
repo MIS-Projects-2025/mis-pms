@@ -6,6 +6,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SystemStatusController;
 
 $app_name = env('APP_NAME', '');
 
@@ -19,6 +20,8 @@ Route::prefix($app_name)->middleware(AuthMiddleware::class)->group(function () {
     Route::post("/add-admin", [AdminController::class, 'addAdmin'])->name('addAdmin');
     Route::post("/remove-admin", [AdminController::class, 'removeAdmin'])->name('removeAdmin');
     Route::patch("/change-admin-role", [AdminController::class, 'changeAdminRole'])->name('changeAdminRole');
+    Route::post('/system-status/online', [SystemStatusController::class, 'setOnline'])->name('system-status.online');
+    Route::post('/system-status/maintenance', [SystemStatusController::class, 'setMaintenance'])->name('system-status.maintenance');
   });
 
   Route::get("/", [DashboardController::class, 'index'])->name('dashboard');

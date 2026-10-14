@@ -1,5 +1,30 @@
 import React, { useState } from "react";
-import { router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
+import { Button } from "@/Components/ui/button";
+import { Input } from "@/Components/ui/input";
+import { Checkbox } from "@/Components/ui/checkbox";
+import { Badge } from "@/Components/ui/badge";
+
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/Components/ui/select";
+
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/Components/ui/table";
+
+import { Tabs, TabsList, TabsTrigger } from "@/Components/ui/tabs";
+
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 export default function DataTable({
     columns,
@@ -14,23 +39,38 @@ export default function DataTable({
     showExport = false,
     children,
     filterDropdown = null,
+    tabs = [],
+    tabKey = "tab",
 }) {
+    const { emp_data } = usePage().props;
+
+    const canAccess = ["admin", "superadmin"].includes(
+        emp_data.emp_role || emp_data.emp_system_role,
+    );
+
     const [selected, setSelected] = useState([]);
     const [activeRow, setActiveRow] = useState(null);
     const [searchInput, setSearchInput] = useState(filters.search || "");
     const [perPage, setPerPage] = useState(filters.perPage || 10);
     const [dropdownValue, setDropdownValue] = useState(
-        filters?.[filterDropdown?.key] || ""
+        filters?.[filterDropdown?.key] || "",
     );
 
     const extractDate = (dt) => (dt ? dt.split(" ")[0] : "");
     const [dateFrom, setDateFrom] = useState(extractDate(filters.start));
     const [dateTo, setDateTo] = useState(extractDate(filters.end));
+    const [localTab, setLocalTab] = useState(filters?.[tabKey] || "");
+    const hasDateFilter = Boolean(dateFrom && dateTo);
 
-    const themeColor =
-        localStorage.getItem("theme") === "dark"
-            ? "hover:bg-gray-700"
-            : "hover:bg-gray-100";
+    const handleTabChange = (value) => {
+        setLocalTab(value);
+
+        router.get(routeName, {
+            ...filters,
+            [tabKey]: value,
+            page: 1,
+        });
+    };
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -45,7 +85,7 @@ export default function DataTable({
         router.get(
             routeName,
             { ...filters, search: searchInput, ...extraFilter },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -62,26 +102,23 @@ export default function DataTable({
                 end: formattedTo,
                 search: undefined,
             },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
     const handleExport = () => {
+        if (!hasDateFilter) return;
+
         const query = {
             ...filters,
-            search: searchInput,
             perPage,
-            start: dateFrom ? `${dateFrom} 00:00:00` : undefined,
-            end: dateTo ? `${dateTo} 23:59:59` : undefined,
+            start: `${dateFrom} 00:00:00`,
+            end: `${dateTo} 23:59:59`,
             export: 1,
         };
 
-        if (filterDropdown) {
-            query[filterDropdown.key] = dropdownValue;
-            query.dropdownFields = filterDropdown.fields.join(",");
-        }
-
         const queryString = new URLSearchParams(query).toString();
+
         window.open(`${routeName}?${queryString}`, "_blank");
     };
 
@@ -112,7 +149,7 @@ export default function DataTable({
         router.get(
             routeName,
             { ...filters, sortBy: key, sortDirection: newDirection },
-            { preserveState: true }
+            { preserveState: true },
         );
     };
 
@@ -135,191 +172,253 @@ export default function DataTable({
         }
 
         return (
-            <div className="join">
-                <button
-                    className="join-item btn btn-sm"
+            <div className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    size="icon"
                     disabled={current <= 1}
-                    onClick={() =>
-                        router.visit(
-                            meta.links.find((l) => l.label === "&laquo;")?.url
-                        )
-                    }
-                    dangerouslySetInnerHTML={{ __html: "&laquo;" }}
-                />
+                    onClick={() => {
+                        const prev = meta.links.find(
+                            (l) => l.label === "&laquo;",
+                        );
+
+                        if (prev?.url) {
+                            router.visit(prev.url);
+                        }
+                    }}
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+
                 {pages.map((page) => (
-                    <button
+                    <Button
                         key={page}
-                        className={`join-item btn btn-sm ${
-                            page === current ? "btn-primary" : ""
-                        }`}
+                        size="sm"
+                        variant={page === current ? "default" : "outline"}
                         onClick={() => {
                             const pageLink = meta.links.find(
-                                (l) => parseInt(l.label) === page
+                                (l) => parseInt(l.label) === page,
                             );
-                            if (pageLink?.url) router.visit(pageLink.url);
+
+                            if (pageLink?.url) {
+                                router.visit(pageLink.url);
+                            }
                         }}
-                        dangerouslySetInnerHTML={{ __html: page.toString() }}
-                    />
+                    >
+                        {page}
+                    </Button>
                 ))}
-                <button
-                    className="join-item btn btn-sm"
+
+                <Button
+                    variant="outline"
+                    size="icon"
                     disabled={current >= last}
-                    onClick={() =>
-                        router.visit(
-                            meta.links.find((l) => l.label === "&raquo;")?.url
-                        )
-                    }
-                    dangerouslySetInnerHTML={{ __html: "&raquo;" }}
-                />
+                    onClick={() => {
+                        const next = meta.links.find(
+                            (l) => l.label === "&raquo;",
+                        );
+
+                        if (next?.url) {
+                            router.visit(next.url);
+                        }
+                    }}
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
             </div>
         );
     };
 
     return (
-        <div className="w-full p-3 border border-gray-300 rounded-lg">
+        <div className="w-full rounded-lg border bg-background p-4">
+            {canAccess && tabs.length > 0 && (
+                <Tabs value={localTab} onValueChange={handleTabChange}>
+                    <TabsList>
+                        {tabs.map((tab) => (
+                            <TabsTrigger key={tab.value} value={tab.value}>
+                                {tab.label}
+
+                                {tab.count !== undefined && (
+                                    <Badge variant="secondary" className="ml-2">
+                                        {tab.count}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        ))}
+                    </TabsList>
+                </Tabs>
+            )}
             <form
                 onSubmit={dateRangeSearch ? handleDateFilter : handleSearch}
                 className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
             >
-                <select
-                    value={perPage}
-                    onChange={(e) => {
-                        const value = parseInt(e.target.value, 10);
-                        setPerPage(value);
+                <Select
+                    value={String(perPage)}
+                    onValueChange={(value) => {
+                        const parsed = Number(value);
+
+                        setPerPage(parsed);
+
                         router.get(
                             routeName,
-                            { ...filters, perPage: value },
-                            { preserveState: true }
+                            {
+                                ...filters,
+                                perPage: parsed,
+                            },
+                            {
+                                preserveState: true,
+                            },
                         );
                     }}
-                    className="select select-sm w-[100px] py-0"
                 >
-                    {[10, 25, 50, 100].map((num) => (
-                        <option key={num} value={num}>
-                            Show {num}
-                        </option>
-                    ))}
-                </select>
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue />
+                    </SelectTrigger>
 
-                {dateRangeSearch ? (
-                    <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:w-auto">
-                        <input
-                            type="date"
-                            value={dateFrom}
-                            onChange={(e) => setDateFrom(e.target.value)}
-                            className="input input-sm input-bordered"
-                        />
-                        <span className="mx-1">to</span>
-                        <input
-                            type="date"
-                            value={dateTo}
-                            onChange={(e) => setDateTo(e.target.value)}
-                            className="input input-sm input-bordered"
-                        />
-                        <button
-                            type="submit"
-                            className="btn btn-sm btn-primary"
-                        >
-                            Filter
-                        </button>
-                        {showExport && (
-                            <button
-                                type="button"
-                                className="btn btn-sm btn-outline"
-                                onClick={handleExport}
-                            >
-                                Export CSV
-                            </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="flex flex-col w-full gap-2 sm:flex-row sm:items-center sm:w-auto">
+                    <SelectContent>
+                        {[10, 25, 50, 100].map((num) => (
+                            <SelectItem key={num} value={String(num)}>
+                                Show {num}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+
+                <div className="flex w-full items-center justify-between gap-4">
+                    {/* LEFT (optional space / future use) */}
+                    <div className="flex-1" />
+
+                    {/* MIDDLE: DATE FILTER (CENTERED) */}
+                    {canAccess && dateRangeSearch && (
+                        <div className="flex items-center gap-2 justify-center flex-1">
+                            <Input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                            />
+
+                            <span className="mx-1">to</span>
+
+                            <Input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                            />
+
+                            <Button type="submit">Filter</Button>
+
+                            {showExport && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleExport}
+                                    disabled={!hasDateFilter}
+                                >
+                                    Export
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* RIGHT: SEARCH FIELD */}
+                    <div className="flex items-center gap-2 justify-end flex-1">
                         {filterDropdown && (
-                            <select
-                                className="select select-sm w-full sm:w-[170px] py-0"
-                                value={dropdownValue}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setDropdownValue(value);
+                            <Select
+                                value={dropdownValue || "all"}
+                                onValueChange={(value) => {
+                                    const selectedValue =
+                                        value === "all" ? "" : value;
+
+                                    setDropdownValue(selectedValue);
+
                                     router.get(
                                         routeName,
                                         {
                                             ...filters,
                                             search: searchInput,
-                                            [filterDropdown.key]: value,
+                                            [filterDropdown.key]: selectedValue,
                                             dropdownFields:
                                                 filterDropdown.fields.join(","),
                                         },
-                                        { preserveState: true }
+                                        { preserveState: true },
                                     );
                                 }}
                             >
-                                <option value="">All</option>
-                                {filterDropdown.options.map((opt) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                    </option>
-                                ))}
-                            </select>
+                                <SelectTrigger className="w-[150px]">
+                                    <SelectValue placeholder="All" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+
+                                    {filterDropdown.options.map((opt) => (
+                                        <SelectItem
+                                            key={opt.value}
+                                            value={String(opt.value)}
+                                        >
+                                            {opt.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         )}
-                        <input
-                            type="text"
+
+                        <Input
+                            className="w-[220px]"
                             placeholder="Search..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full input input-sm input-bordered sm:w-auto"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleSearch(e);
+                                }
+                            }}
                         />
-                        <button
-                            type="submit"
-                            className="px-2 btn btn-sm btn-primary"
+
+                        <Button
+                            size="icon"
+                            type="button"
+                            onClick={handleSearch}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="1.5"
-                                stroke="currentColor"
-                                className="size-4"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                                />
-                            </svg>
-                        </button>
+                            <Search className="h-4 w-4" />
+                        </Button>
+
                         {showExport && (
-                            <button
+                            <Button
                                 type="button"
-                                className="btn btn-sm btn-outline"
+                                variant="outline"
                                 onClick={handleExport}
                             >
-                                Export CSV
-                            </button>
+                                Export
+                            </Button>
                         )}
                     </div>
-                )}
+                </div>
             </form>
 
             <div className="w-full mt-4 overflow-x-auto">
-                <table className="table min-w-full table-zebra">
-                    <thead>
-                        <tr>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
                             {selectable && (
-                                <th>
-                                    <input
-                                        type="checkbox"
-                                        onChange={handleSelectAll}
+                                <TableHead>
+                                    <Checkbox
                                         checked={
                                             selected.length === data.length &&
                                             data.length > 0
                                         }
-                                        onClick={(e) => e.stopPropagation()}
+                                        onCheckedChange={(checked) =>
+                                            handleSelectAll({
+                                                target: {
+                                                    checked,
+                                                },
+                                            })
+                                        }
                                     />
-                                </th>
+                                </TableHead>
                             )}
                             {columns.map((col) => (
-                                <th
+                                <TableHead
                                     key={col.key}
                                     onClick={() => handleSort(col.key)}
                                     className="cursor-pointer whitespace-nowrap"
@@ -332,63 +431,62 @@ export default function DataTable({
                                                 : "▼"}
                                         </span>
                                     )}
-                                </th>
+                                </TableHead>
                             ))}
-                        </tr>
-                    </thead>
-                    <tbody>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
                         {data.length === 0 ? (
-                            <tr>
-                                <td
+                            <TableRow>
+                                <TableCell
                                     colSpan={
                                         columns.length + (selectable ? 1 : 0)
                                     }
                                     className="text-center"
                                 >
                                     No results found.
-                                </td>
-                            </tr>
+                                </TableCell>
+                            </TableRow>
                         ) : (
                             data.map((row, index) => {
                                 const key = `${row[rowKey]}-${index}`;
                                 const isSelected = selected.some(
-                                    (r) => r[rowKey] === row[rowKey]
+                                    (r) => r[rowKey] === row[rowKey],
                                 );
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={key}
-                                        className={`transition-colors cursor-pointer ${themeColor}`}
+                                        className="cursor-pointer transition-colors hover:bg-muted/50"
                                         onClick={() => handleRowClick(row)}
                                     >
                                         {selectable && (
-                                            <td
+                                            <TableCell
                                                 onClick={(e) =>
                                                     e.stopPropagation()
                                                 }
                                             >
-                                                <input
-                                                    type="checkbox"
+                                                <Checkbox
                                                     checked={isSelected}
-                                                    onChange={() =>
+                                                    onCheckedChange={() =>
                                                         handleSelectRow(row)
                                                     }
                                                 />
-                                            </td>
+                                            </TableCell>
                                         )}
                                         {columns.map((col, i) => (
-                                            <td
+                                            <TableCell
                                                 key={`${key}-${col.key}-${i}`}
                                                 className="whitespace-nowrap max-w-[200px] truncate"
                                             >
                                                 {row[col.key] ?? "-"}
-                                            </td>
+                                            </TableCell>
                                         ))}
-                                    </tr>
+                                    </TableRow>
                                 );
                             })
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
             </div>
 
             {meta?.links?.length > 0 && (
