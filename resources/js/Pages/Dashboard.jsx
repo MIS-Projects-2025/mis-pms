@@ -1,13 +1,8 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
-import React, { useState, useEffect, useMemo } from "react";
+import { Head, router } from "@inertiajs/react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/Components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/Components/ui/card";
 
 import {
     Monitor,
@@ -22,6 +17,7 @@ import {
     ChevronRight,
     AlertTriangle,
     CheckCircle2,
+    RefreshCw,
 } from "lucide-react";
 
 import {
@@ -36,6 +32,19 @@ import {
 } from "recharts";
 
 // ─── Helpers / constants (outside the component to avoid remounting) ─────────
+const REFRESH_INTERVAL_MS = 60 * 1000;
+
+const REFRESH_PROPS = [
+    "today",
+    "chartDates",
+    "computerPerDay",
+    "printerPerDay",
+    "boxingPerDay",
+    "repairPerDay",
+    "cctvPerDay",
+    "pmItems",
+];
+
 const TYPE_META = {
     computer: { label: "Computer", chip: "bg-blue-100 text-blue-700" },
     printer: { label: "Printer", chip: "bg-cyan-100 text-cyan-700" },
@@ -43,14 +52,42 @@ const TYPE_META = {
     ladder: { label: "Ladder", chip: "bg-violet-100 text-violet-700" },
 };
 
+const TREND_SERIES = [
+    { key: "computer", name: "Computer", color: "#2563eb" },
+    { key: "printer", name: "Printer", color: "#0891b2" },
+    { key: "boxing", name: "Boxing", color: "#d97706" },
+    { key: "repair", name: "Computer Repair", color: "#65a30d" },
+    { key: "cctv", name: "CCTV", color: "#475569" },
+];
+
 const MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
 ];
 
 const MONTHS_FULL = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
 ];
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -61,6 +98,15 @@ const fmtDate = (str) => {
     const [y, m, d] = str.split("-").map(Number);
     return `${MONTHS[m - 1]} ${pad(d)}, ${y}`;
 };
+
+// "2026-10" -> "October 2026"
+const fmtMonthKey = (key) => {
+    const [y, m] = key.split("-").map(Number);
+    return `${MONTHS_FULL[m - 1]} ${y}`;
+};
+
+const fmtTime = (d) =>
+    `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
 const statusText = (item) => {
     if (item.due === null) return "No PM record yet";
@@ -150,7 +196,7 @@ function PmCalendar({ today, eventsByDate, typeFilter, setTypeFilter }) {
         setSelectedDay(null);
     };
 
-    const selectedEvents = selectedDay ? eventsByDate[selectedDay] ?? [] : [];
+    const selectedEvents = selectedDay ? (eventsByDate[selectedDay] ?? []) : [];
 
     return (
         <Card className="bg-white border-gray-200 h-full flex flex-col">
@@ -246,16 +292,14 @@ function PmCalendar({ today, eventsByDate, typeFilter, setTypeFilter }) {
                                     {d}
                                 </div>
                                 <div className="mt-1 space-y-0.5">
-                                    {Object.entries(counts).map(
-                                        ([type, n]) => (
-                                            <div
-                                                key={type}
-                                                className={`text-[10px] leading-4 px-1 rounded ${TYPE_META[type].chip}`}
-                                            >
-                                                {TYPE_META[type].label}: {n}
-                                            </div>
-                                        ),
-                                    )}
+                                    {Object.entries(counts).map(([type, n]) => (
+                                        <div
+                                            key={type}
+                                            className={`text-[10px] leading-4 px-1 rounded ${TYPE_META[type].chip}`}
+                                        >
+                                            {TYPE_META[type].label}: {n}
+                                        </div>
+                                    ))}
                                 </div>
                             </button>
                         );
@@ -315,6 +359,11 @@ export default function Dashboard({
 }) {
     const [currentDateTime, setCurrentDateTime] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
+    const [lastUpdated, setLastUpdated] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const inFlightRef = useRef(false);
+    const lastRefreshRef = useRef(Date.now());
 
     // Use the server date for consistency (Asia/Manila), fallback to local
     const todayStr = useMemo(() => {
@@ -323,10 +372,9 @@ export default function Dashboard({
         return `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`;
     }, [today]);
 
-    const formattedChartDates = chartDates.map((date) => {
-        const [y, m, d] = date.split("-").map(Number);
-        return `${MONTHS[m - 1]}/${pad(d)}/${y}`;
-    });
+    // Activity month filter: "all" or "YYYY-MM" (defaults to the current month).
+    // Controls the 5 summary cards AND the trend chart.
+    const [trendMonth, setTrendMonth] = useState(() => todayStr.slice(0, 7));
 
     const formatDateTime = (date = new Date()) => {
         const d = new Date(date);
@@ -335,13 +383,10 @@ export default function Dashboard({
         const day = pad(d.getDate());
         const year = d.getFullYear();
 
-        const hours = pad(d.getHours());
-        const minutes = pad(d.getMinutes());
-        const seconds = pad(d.getSeconds());
-
-        return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`;
+        return `${month}/${day}/${year} ${fmtTime(d)}`;
     };
 
+    // Live clock
     useEffect(() => {
         setCurrentDateTime(formatDateTime());
 
@@ -350,6 +395,55 @@ export default function Dashboard({
         }, 1000);
 
         return () => clearInterval(interval);
+    }, []);
+
+    // Silent refresh every 60 seconds (paused while the tab is hidden)
+    useEffect(() => {
+        setLastUpdated(new Date());
+
+        const refresh = () => {
+            if (inFlightRef.current) return;
+
+            inFlightRef.current = true;
+            setRefreshing(true);
+
+            router.reload({
+                only: REFRESH_PROPS,
+                preserveScroll: true,
+                preserveState: true,
+                showProgress: false,
+                onSuccess: () => {
+                    lastRefreshRef.current = Date.now();
+                    setLastUpdated(new Date());
+                },
+                onFinish: () => {
+                    inFlightRef.current = false;
+                    setRefreshing(false);
+                },
+            });
+        };
+
+        const interval = setInterval(() => {
+            if (document.hidden) return;
+            refresh();
+        }, REFRESH_INTERVAL_MS);
+
+        // Refresh right away when the user comes back to the tab (if data is stale)
+        const onVisibility = () => {
+            if (
+                !document.hidden &&
+                Date.now() - lastRefreshRef.current >= REFRESH_INTERVAL_MS
+            ) {
+                refresh();
+            }
+        };
+
+        document.addEventListener("visibilitychange", onVisibility);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", onVisibility);
+        };
     }, []);
 
     // ── PM data ──
@@ -374,7 +468,9 @@ export default function Dashboard({
             filteredPm
                 .filter((i) => i.status === "available")
                 .sort((a, b) =>
-                    (a.due ?? "0000-00-00").localeCompare(b.due ?? "0000-00-00"),
+                    (a.due ?? "0000-00-00").localeCompare(
+                        b.due ?? "0000-00-00",
+                    ),
                 ),
         [filteredPm],
     );
@@ -397,21 +493,76 @@ export default function Dashboard({
         return map;
     }, [filteredPm]);
 
-    // ── Today counts ──
-    const todayComputer = Number(computerPerDay[todayStr] ?? 0);
-    const todayPrinter = Number(printerPerDay[todayStr] ?? 0);
-    const todayBoxing = Number(boxingPerDay[todayStr] ?? 0);
-    const todayRepair = Number(repairPerDay[todayStr] ?? 0);
-    const todayCCTV = Number(cctvPerDay[todayStr] ?? 0);
+    // ── Activity: month filter, chart data, and card totals ──
+    const monthOptions = useMemo(() => {
+        const set = new Set(chartDates.map((d) => d.slice(0, 7)));
+        set.add(todayStr.slice(0, 7));
+        return Array.from(set).sort().reverse(); // newest first
+    }, [chartDates, todayStr]);
 
-    const chartData = chartDates.map((date, index) => ({
-        date: formattedChartDates[index],
+    const valuesFor = (date) => ({
         computer: Number(computerPerDay[date] ?? 0),
         printer: Number(printerPerDay[date] ?? 0),
         boxing: Number(boxingPerDay[date] ?? 0),
         repair: Number(repairPerDay[date] ?? 0),
         cctv: Number(cctvPerDay[date] ?? 0),
-    }));
+    });
+
+    const chartData = useMemo(() => {
+        if (trendMonth === "all") {
+            return chartDates.map((date) => {
+                const [y, m, d] = date.split("-").map(Number);
+                return {
+                    date: `${MONTHS[m - 1]}/${pad(d)}/${y}`,
+                    ...valuesFor(date),
+                };
+            });
+        }
+
+        // Single month: show every day (zeros included), up to today for the current month
+        const [y, m] = trendMonth.split("-").map(Number);
+        const daysInMonth = new Date(y, m, 0).getDate();
+        const lastDay =
+            trendMonth === todayStr.slice(0, 7)
+                ? Number(todayStr.slice(8, 10))
+                : daysInMonth;
+
+        const rows = [];
+        for (let d = 1; d <= lastDay; d++) {
+            const key = `${y}-${pad(m)}-${pad(d)}`;
+            rows.push({
+                date: `${MONTHS[m - 1]}/${pad(d)}`,
+                ...valuesFor(key),
+            });
+        }
+        return rows;
+    }, [
+        trendMonth,
+        chartDates,
+        todayStr,
+        computerPerDay,
+        printerPerDay,
+        boxingPerDay,
+        repairPerDay,
+        cctvPerDay,
+    ]);
+
+    // Totals for the selected period (used by the 5 summary cards)
+    const totals = useMemo(() => {
+        const t = {};
+        TREND_SERIES.forEach((s) => {
+            t[s.key] = chartData.reduce((sum, r) => sum + r[s.key], 0);
+        });
+        return t;
+    }, [chartData]);
+
+    const periodLabel =
+        trendMonth === "all" ? "All months" : fmtMonthKey(trendMonth);
+
+    const monthIdx = monthOptions.indexOf(trendMonth);
+    const canGoOlder =
+        trendMonth !== "all" && monthIdx < monthOptions.length - 1;
+    const canGoNewer = trendMonth !== "all" && monthIdx > 0;
 
     return (
         <AuthenticatedLayout>
@@ -419,11 +570,24 @@ export default function Dashboard({
 
             <div className="p-6 space-y-6">
                 {/* Header */}
-                <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <h1 className="text-3xl font-bold flex items-center gap-2">
                         <ChartNetwork className="h-8 w-8" />
                         Checklist Monitoring Dashboard
                     </h1>
+
+                    <div
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                        title="Data refreshes automatically every 60 seconds"
+                    >
+                        <RefreshCw
+                            className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
+                        />
+                        <span>
+                            Last updated:{" "}
+                            {lastUpdated ? fmtTime(lastUpdated) : "-"}
+                        </span>
+                    </div>
                 </div>
 
                 {/* PM Status Summary */}
@@ -512,16 +676,64 @@ export default function Dashboard({
                     </div>
                 </div>
 
-                {/* Today Summary Cards */}
+                {/* Checklist Activity: month filter (controls cards + chart) */}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
+                        <ChartSpline className="h-6 w-6 text-blue-600" />
+                        Checklist Activity
+                        <span className="text-sm font-medium text-muted-foreground">
+                            ({periodLabel})
+                        </span>
+                    </h2>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            className="p-1 border rounded-md hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                            onClick={() =>
+                                setTrendMonth(monthOptions[monthIdx + 1])
+                            }
+                            disabled={!canGoOlder}
+                            title="Previous month"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+
+                        <select
+                            className="border rounded-md px-2 py-1 text-sm bg-background min-w-[10rem]"
+                            value={trendMonth}
+                            onChange={(e) => setTrendMonth(e.target.value)}
+                        >
+                            <option value="all">All months</option>
+                            {monthOptions.map((key) => (
+                                <option key={key} value={key}>
+                                    {fmtMonthKey(key)}
+                                </option>
+                            ))}
+                        </select>
+
+                        <button
+                            className="p-1 border rounded-md hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+                            onClick={() =>
+                                setTrendMonth(monthOptions[monthIdx - 1])
+                            }
+                            disabled={!canGoNewer}
+                            title="Next month"
+                        >
+                            <ChevronRight className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Summary Cards (totals for the selected period) */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <Card className="bg-blue-50 border-blue-200">
                         <CardContent className="pt-6">
                             <Monitor className="h-10 w-10 text-blue-600 mb-3" />
                             <p className="text-sm text-slate-600">
-                                Computer Checklists (Today)
+                                Computer Checklists ({periodLabel})
                             </p>
                             <p className="text-4xl font-bold text-blue-700 text-right">
-                                {todayComputer}
+                                {totals.computer}
                             </p>
                         </CardContent>
                     </Card>
@@ -530,10 +742,10 @@ export default function Dashboard({
                         <CardContent className="pt-6">
                             <Printer className="h-10 w-10 text-cyan-600 mb-3" />
                             <p className="text-sm text-slate-600">
-                                Printer Checklists (Today)
+                                Printer Checklists ({periodLabel})
                             </p>
                             <p className="text-4xl font-bold text-cyan-700 text-right">
-                                {todayPrinter}
+                                {totals.printer}
                             </p>
                         </CardContent>
                     </Card>
@@ -542,10 +754,10 @@ export default function Dashboard({
                         <CardContent className="pt-6">
                             <Package className="h-10 w-10 text-amber-700 mb-3" />
                             <p className="text-sm text-slate-600">
-                                Boxing Checklists (Today)
+                                Boxing Checklists ({periodLabel})
                             </p>
                             <p className="text-4xl font-bold text-amber-700 text-right">
-                                {todayBoxing}
+                                {totals.boxing}
                             </p>
                         </CardContent>
                     </Card>
@@ -554,10 +766,10 @@ export default function Dashboard({
                         <CardContent className="pt-6">
                             <Wrench className="h-10 w-10 text-lime-700 mb-3" />
                             <p className="text-sm text-slate-600">
-                                Computer Repairs (Today)
+                                Computer Repairs ({periodLabel})
                             </p>
                             <p className="text-4xl font-bold text-lime-700 text-right">
-                                {todayRepair}
+                                {totals.repair}
                             </p>
                         </CardContent>
                     </Card>
@@ -566,10 +778,10 @@ export default function Dashboard({
                         <CardContent className="pt-6">
                             <Camera className="h-10 w-10 text-slate-700 mb-3" />
                             <p className="text-sm text-slate-600">
-                                CCTV Checklists (Today)
+                                CCTV Checklists ({periodLabel})
                             </p>
                             <p className="text-4xl font-bold text-slate-700 text-right">
-                                {todayCCTV}
+                                {totals.cctv}
                             </p>
                         </CardContent>
                     </Card>
@@ -577,7 +789,7 @@ export default function Dashboard({
 
                 {/* Chart */}
                 <Card className="bg-white border-gray-200">
-                    <CardHeader className="flex justify-start ml-10">
+                    <CardHeader className="px-10">
                         <div className="flex flex-col gap-2">
                             <p className="text-md text-muted-foreground text-stone-700">
                                 {currentDateTime}
@@ -599,41 +811,18 @@ export default function Dashboard({
                                 <Tooltip />
                                 <Legend />
 
-                                <Line
-                                    type="monotone"
-                                    dataKey="computer"
-                                    name="Computer"
-                                    stroke="#2563eb"
-                                    strokeWidth={3}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="printer"
-                                    name="Printer"
-                                    stroke="#0891b2"
-                                    strokeWidth={3}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="boxing"
-                                    name="Boxing"
-                                    stroke="#d97706"
-                                    strokeWidth={3}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="repair"
-                                    name="Computer Repair"
-                                    stroke="#65a30d"
-                                    strokeWidth={3}
-                                />
-                                <Line
-                                    type="monotone"
-                                    dataKey="cctv"
-                                    name="CCTV"
-                                    stroke="#475569"
-                                    strokeWidth={3}
-                                />
+                                {TREND_SERIES.map((s) => (
+                                    <Line
+                                        key={s.key}
+                                        type="monotone"
+                                        dataKey={s.key}
+                                        name={s.name}
+                                        stroke={s.color}
+                                        strokeWidth={3}
+                                        dot={trendMonth !== "all"}
+                                        activeDot={{ r: 5 }}
+                                    />
+                                ))}
                             </LineChart>
                         </ResponsiveContainer>
                     </CardContent>
